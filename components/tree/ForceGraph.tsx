@@ -1,9 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import * as d3 from "d3";
 import { models } from "@/lib/data/models";
 import { FAMILY_COLORS, type ModelNode, type ModelFamily } from "@/lib/types";
+import {
+  contextWindowToRadius,
+  paramCountToSaturation,
+  adjustColorSaturation,
+  getModalityShape,
+} from "@/lib/vizUtils";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -11,70 +17,35 @@ interface GraphNode extends d3.SimulationNodeDatum {
   id: string;
   model: ModelNode;
   radius: number;
+  color: string; // Saturation-adjusted family color
 }
 
 interface GraphLink extends d3.SimulationLinkDatum<GraphNode> {
   type: "parent" | "influence";
 }
 
-interface ForceGraphProps {
+interface ForceGraph2DProps {
   familyFilter: ModelFamily | "all";
   searchQuery: string;
   onSelectModel: (model: ModelNode | null) => void;
   selectedModelId: string | null;
+  motionEnabled: boolean;
 }
-
-// ─── Constants ───────────────────────────────────────────────────────────────
-
-const FAMILY_LABELS: Record<string, string> = {
-  "openai-gpt": "OpenAI GPT",
-  "openai-o": "OpenAI o-series",
-  "anthropic-claude": "Anthropic Claude",
-  "google-gemini": "Google Gemini",
-  "google-palm": "Google PaLM",
-  "meta-llama": "Meta LLaMA",
-  mistral: "Mistral AI",
-  "xai-grok": "xAI Grok",
-  "cohere-command": "Cohere Command",
-  "microsoft-phi": "Microsoft Phi",
-  deepseek: "DeepSeek",
-};
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export function ForceGraph({
+export function ForceGraph2D({
   familyFilter,
   searchQuery,
   onSelectModel,
   selectedModelId,
-}: ForceGraphProps) {
+  motionEnabled,
+}: ForceGraph2DProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const simulationRef = useRef<d3.Simulation<GraphNode, GraphLink> | null>(null);
-  const [tooltipData, setTooltipData] = useState<{
-    model: ModelNode;
-    x: number;
-    y: number;
-  } | null>(null);
-  const hoveredNodeRef = useRef<string | null>(null);
-  const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
-
-  // Observe container resize
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    const observer = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (entry) {
-        setDimensions({
-          width: entry.contentRect.width,
-          height: entry.contentRect.height,
-        });
-      }
-    });
-    observer.observe(container);
-    return () => observer.disconnect();
-  }, []);
+  const simulationRef = useRef<d3.Simulation<GraphNode, GraphLink> | null>(
+    null
+  );
 
   // Filter data
   const getFilteredData = useCallback(() => {
@@ -97,50 +68,50 @@ export function ForceGraph({
   // Build and render the graph
   useEffect(() => {
     const svgEl = svgRef.current;
-    if (!svgEl) return;
+    const container = containerRef.current;
+    if (!svgEl || !container) return;
+
+    const rect = container.getBoundingClientRect();
+    const width = rect.width || 800;
+    const height = rect.height || 600;
+    if (width < 100 || height < 100) return;
+
     const svg = d3.select(svgEl);
     svg.selectAll("*").remove();
-
-    const { width, height } = dimensions;
-    if (width < 100 || height < 100) return;
 
     const filteredModels = getFilteredData();
     const filteredIds = new Set(filteredModels.map((m) => m.id));
 
-    // Build nodes
-    const nodes: GraphNode[] = filteredModels.map((model) => ({
-      id: model.id,
-      model,
-      radius: model.parentIds.length === 0 ? 14 : 10,
-    }));
+    // Build nodes with multi-dimensional encoding
+    const nodes: GraphNode[] = filteredModels.map((model) => {
+      const baseColor = FAMILY_COLORS[model.family];
+      const saturation = paramCountToSaturation(model.parameterCount);
+      return {
+        id: model.id,
+        model,
+        radius: contextWindowToRadius(model.contextWindow),
+        color: adjustColorSaturation(baseColor, saturation),
+      };
+    });
 
-
-    // Build links (only if both sides exist in filtered set)
+    // Build links
     const links: GraphLink[] = [];
     for (const model of filteredModels) {
       for (const parentId of model.parentIds) {
         if (filteredIds.has(parentId)) {
-          links.push({
-            source: parentId,
-            target: model.id,
-            type: "parent",
-          });
+          links.push({ source: parentId, target: model.id, type: "parent" });
         }
       }
       if (model.influenceIds) {
         for (const infId of model.influenceIds) {
           if (filteredIds.has(infId)) {
-            links.push({
-              source: infId,
-              target: model.id,
-              type: "influence",
-            });
+            links.push({ source: infId, target: model.id, type: "influence" });
           }
         }
       }
     }
 
-    // Create zoom behavior
+    // ── SVG setup ──────────────────────────────────────────────────────────
     const zoom = d3
       .zoom<SVGSVGElement, unknown>()
       .scaleExtent([0.15, 3])
@@ -151,16 +122,19 @@ export function ForceGraph({
     svg
       .attr("width", width)
       .attr("height", height)
-      .call(zoom as unknown as (selection: d3.Selection<SVGSVGElement, unknown, null, undefined>) => void)
+      .call(
+        zoom as unknown as (
+          s: d3.Selection<SVGSVGElement, unknown, null, undefined>
+        ) => void
+      )
       .on("dblclick.zoom", null);
 
-    // Main group for zoom/pan transforms
     const g = svg.append("g");
 
-    // Defs for arrow markers and gradients
+    // ── Defs ───────────────────────────────────────────────────────────────
     const defs = svg.append("defs");
 
-    // Arrow marker for parent links
+    // Arrow markers
     defs
       .append("marker")
       .attr("id", "arrow-parent")
@@ -174,7 +148,6 @@ export function ForceGraph({
       .attr("d", "M0,-4L8,0L0,4")
       .attr("fill", "rgba(255,255,255,0.25)");
 
-    // Arrow marker for influence links
     defs
       .append("marker")
       .attr("id", "arrow-influence")
@@ -188,7 +161,27 @@ export function ForceGraph({
       .attr("d", "M0,-3L6,0L0,3")
       .attr("fill", "rgba(245, 158, 11, 0.3)");
 
-    // Radial gradient for background glow
+    // Per-node radial gradients
+    nodes.forEach((n) => {
+      const grad = defs
+        .append("radialGradient")
+        .attr("id", `grad-${n.id}`)
+        .attr("cx", "35%")
+        .attr("cy", "35%")
+        .attr("r", "65%");
+      grad
+        .append("stop")
+        .attr("offset", "0%")
+        .attr("stop-color", n.color)
+        .attr("stop-opacity", 0.6);
+      grad
+        .append("stop")
+        .attr("offset", "100%")
+        .attr("stop-color", n.color)
+        .attr("stop-opacity", 0.15);
+    });
+
+    // Background glow
     const bgGrad = defs
       .append("radialGradient")
       .attr("id", "bg-glow")
@@ -204,14 +197,13 @@ export function ForceGraph({
       .attr("offset", "100%")
       .attr("stop-color", "rgba(0,0,0,0)");
 
-    // Background glow
     g.append("circle")
       .attr("cx", width / 2)
       .attr("cy", height / 2)
       .attr("r", Math.min(width, height) * 0.4)
       .attr("fill", "url(#bg-glow)");
 
-    // Force simulation
+    // ── Force simulation ───────────────────────────────────────────────────
     const simulation = d3
       .forceSimulation<GraphNode>(nodes)
       .force(
@@ -226,19 +218,13 @@ export function ForceGraph({
       .force("center", d3.forceCenter(width / 2, height / 2))
       .force(
         "collision",
-        d3.forceCollide<GraphNode>().radius((d) => d.radius + 8)
+        d3.forceCollide<GraphNode>().radius((d) => d.radius + 6)
       )
-      .force(
-        "x",
-        d3
-          .forceX<GraphNode>(width / 2)
-          .strength(0.03)
-      )
+      .force("x", d3.forceX<GraphNode>(width / 2).strength(0.03))
       .force(
         "y",
         d3
           .forceY<GraphNode>((d) => {
-            // Position nodes vertically by release date
             const date = new Date(d.model.releaseDate);
             const minYear = 2018;
             const maxYear = 2027;
@@ -249,12 +235,12 @@ export function ForceGraph({
           })
           .strength(0.12)
       )
-      .alphaDecay(0.03)
-      .velocityDecay(0.4);
+      .alphaDecay(0.04)
+      .velocityDecay(0.45);
 
     simulationRef.current = simulation;
 
-    // Draw links
+    // ── Draw links ─────────────────────────────────────────────────────────
     const link = g
       .append("g")
       .attr("class", "links")
@@ -263,20 +249,18 @@ export function ForceGraph({
       .join("line")
       .attr("stroke", (d) =>
         d.type === "parent"
-          ? "rgba(255, 255, 255, 0.15)"
-          : "rgba(245, 158, 11, 0.15)"
+          ? "rgba(255, 255, 255, 0.12)"
+          : "rgba(245, 158, 11, 0.12)"
       )
       .attr("stroke-width", (d) => (d.type === "parent" ? 1.5 : 1))
       .attr("stroke-dasharray", (d) =>
         d.type === "influence" ? "4 4" : "none"
       )
       .attr("marker-end", (d) =>
-        d.type === "parent"
-          ? "url(#arrow-parent)"
-          : "url(#arrow-influence)"
+        d.type === "parent" ? "url(#arrow-parent)" : "url(#arrow-influence)"
       );
 
-    // Draw node groups
+    // ── Draw node groups ───────────────────────────────────────────────────
     const node = g
       .append("g")
       .attr("class", "nodes")
@@ -304,57 +288,63 @@ export function ForceGraph({
           })
       );
 
-    // Node outer glow ring
+    // ── Node rendering with shape encoding ─────────────────────────────────
+    const isDead = (m: ModelNode) =>
+      m.status === "deprecated" || m.status === "discontinued";
+    const isOpen = (m: ModelNode) =>
+      m.openness === "open-weight" || m.openness === "open-source";
+
+    // Outer glow ring
     node
       .append("circle")
       .attr("r", (d) => d.radius + 4)
       .attr("fill", "none")
-      .attr("stroke", (d) => {
-        const model = d.model;
-        const isDead = model.status === "deprecated" || model.status === "discontinued";
-        return isDead ? "rgba(255,255,255,0.08)" : FAMILY_COLORS[model.family];
-      })
+      .attr("stroke", (d) =>
+        isDead(d.model) ? "rgba(255,255,255,0.06)" : d.color
+      )
       .attr("stroke-width", 1.5)
-      .attr("stroke-opacity", 0.15);
+      .attr("stroke-opacity", (d) => (isDead(d.model) ? 0.1 : 0.2))
+      .classed("glow-ring", true);
 
-    // Node background circle
-    node
-      .append("circle")
-      .attr("r", (d) => d.radius)
-      .attr("fill", (d) => {
-        const model = d.model;
-        const isDead = model.status === "deprecated" || model.status === "discontinued";
-        if (isDead) return "rgba(255,255,255,0.03)";
-        const c = FAMILY_COLORS[model.family];
-        return `${c}30`;
-      })
-      .attr("stroke", (d) => {
-        const model = d.model;
-        const isDead = model.status === "deprecated" || model.status === "discontinued";
-        if (isDead) return "rgba(255,255,255,0.15)";
-        return FAMILY_COLORS[model.family];
-      })
-      .attr("stroke-width", (d) => {
-        const isDead = d.model.status === "deprecated" || d.model.status === "discontinued";
-        return isDead ? 1 : 2;
-      })
-      .attr("stroke-dasharray", (d) => {
-        const isDead = d.model.status === "deprecated" || d.model.status === "discontinued";
-        return isDead ? "3 2" : "none";
-      })
-      .classed("node-circle", true);
+    // Main shape (modality-encoded)
+    node.each(function (d) {
+      const group = d3.select(this);
+      const shape = getModalityShape(d.model.modality, d.radius);
+      const dead = isDead(d.model);
+      const open = isOpen(d.model);
+
+      if (shape.type === "circle") {
+        group
+          .append("circle")
+          .attr("r", d.radius)
+          .attr("fill", dead ? "rgba(255,255,255,0.03)" : `url(#grad-${d.id})`)
+          .attr("stroke", dead ? "rgba(255,255,255,0.15)" : d.color)
+          .attr("stroke-width", dead ? 1 : 2)
+          .attr("stroke-dasharray", dead ? "3 2" : open ? "4 2" : "none")
+          .classed("node-shape", true);
+      } else {
+        group
+          .append("polygon")
+          .attr("points", shape.points!)
+          .attr("fill", dead ? "rgba(255,255,255,0.03)" : `url(#grad-${d.id})`)
+          .attr("stroke", dead ? "rgba(255,255,255,0.15)" : d.color)
+          .attr("stroke-width", dead ? 1 : 2)
+          .attr("stroke-dasharray", dead ? "3 2" : open ? "4 2" : "none")
+          .attr("stroke-linejoin", "round")
+          .classed("node-shape", true);
+      }
+    });
 
     // Inner dot
     node
       .append("circle")
-      .attr("r", 3)
-      .attr("fill", (d) => FAMILY_COLORS[d.model.family]);
+      .attr("r", 2.5)
+      .attr("fill", (d) => d.color);
 
     // Label
     node
       .append("text")
       .text((d) => {
-        // Short name for graph readability
         const name = d.model.name;
         if (name.length > 16) return name.slice(0, 14) + "…";
         return name;
@@ -378,15 +368,59 @@ export function ForceGraph({
       .attr("font-family", "var(--font-mono)")
       .attr("pointer-events", "none");
 
-    // Interaction
+    // ── D3-only tooltip (no React state) ───────────────────────────────────
+    const tooltipGroup = g
+      .append("g")
+      .attr("class", "tooltip-group")
+      .style("pointer-events", "none")
+      .style("display", "none");
+
+    const tooltipFo = tooltipGroup
+      .append("foreignObject")
+      .attr("width", 280)
+      .attr("height", 180)
+      .attr("x", -140)
+      .attr("y", -180);
+
+    const tooltipDiv = tooltipFo
+      .append("xhtml:div")
+      .style("background", "rgba(18, 18, 26, 0.85)")
+      .style("backdrop-filter", "blur(20px)")
+      .style("-webkit-backdrop-filter", "blur(20px)")
+      .style("border", "1px solid rgba(255,255,255,0.12)")
+      .style("border-radius", "12px")
+      .style("padding", "12px 14px")
+      .style("max-width", "280px")
+      .style("font-family", "var(--font-sans)")
+      .style("pointer-events", "none")
+      .style("box-shadow", "0 8px 32px rgba(0,0,0,0.4)");
+
+    // ── Hover state (pure D3, no React) ────────────────────────────────────
+    let hoveredId: string | null = null;
+    let savedFx: number | null = null;
+    let savedFy: number | null = null;
+
     node
       .on("click", (_event, d) => {
         onSelectModel(d.model);
       })
       .on("mouseenter", (_event, d) => {
-        hoveredNodeRef.current = d.id;
+        if (hoveredId === d.id) return;
+        hoveredId = d.id;
+
+        // Pin the node — prevents it from drifting under cursor
+        savedFx = d.fx;
+        savedFy = d.fy;
+        d.fx = d.x;
+        d.fy = d.y;
+
+        // Freeze simulation
+        simulation.alphaTarget(0).alpha(Math.min(simulation.alpha(), 0.01));
+
         // Highlight connected links
         link
+          .transition()
+          .duration(120)
           .attr("stroke", (l) => {
             const src =
               typeof l.source === "object"
@@ -398,12 +432,12 @@ export function ForceGraph({
                 : l.target;
             if (src === d.id || tgt === d.id) {
               return l.type === "parent"
-                ? FAMILY_COLORS[d.model.family]
+                ? d.color
                 : "rgba(245, 158, 11, 0.8)";
             }
             return l.type === "parent"
-              ? "rgba(255, 255, 255, 0.06)"
-              : "rgba(245, 158, 11, 0.06)";
+              ? "rgba(255, 255, 255, 0.04)"
+              : "rgba(245, 158, 11, 0.04)";
           })
           .attr("stroke-width", (l) => {
             const src =
@@ -419,52 +453,122 @@ export function ForceGraph({
           });
 
         // Dim non-connected nodes
-        node.attr("opacity", (n) => {
-          if (n.id === d.id) return 1;
-          const isConnected = links.some((l) => {
-            const src = typeof l.source === "object" ? (l.source as GraphNode).id : l.source;
-            const tgt = typeof l.target === "object" ? (l.target as GraphNode).id : l.target;
-            return (src === d.id && tgt === n.id) || (tgt === d.id && src === n.id);
+        node
+          .transition()
+          .duration(120)
+          .attr("opacity", (n) => {
+            if (n.id === d.id) return 1;
+            const isConnected = links.some((l) => {
+              const src =
+                typeof l.source === "object"
+                  ? (l.source as GraphNode).id
+                  : l.source;
+              const tgt =
+                typeof l.target === "object"
+                  ? (l.target as GraphNode).id
+                  : l.target;
+              return (
+                (src === d.id && tgt === n.id) ||
+                (tgt === d.id && src === n.id)
+              );
+            });
+            return isConnected ? 1 : 0.2;
           });
-          return isConnected ? 1 : 0.25;
-        });
 
-        // Use the node's simulation position for stable tooltip
-        const transform = d3.zoomTransform(svgEl);
-        const tooltipX = transform.applyX(d.x!) ;
-        const tooltipY = transform.applyY(d.y!) - d.radius - 10;
-        setTooltipData({
-          model: d.model,
-          x: tooltipX,
-          y: tooltipY,
-        });
+        // Build tooltip HTML
+        const dead = isDead(d.model);
+        const statusBadge = dead
+          ? `<span style="font-size:9px;padding:2px 6px;border-radius:99px;background:rgba(239,68,68,0.15);color:#f87171;font-weight:500">${d.model.status === "discontinued" ? "☠ Killed" : "⚠ Deprecated"}</span>`
+          : "";
+        const openBadge = isOpen(d.model)
+          ? `<span style="font-size:9px;padding:2px 6px;border-radius:99px;background:rgba(16,185,129,0.15);color:#34d399;font-weight:500">${d.model.openness === "open-source" ? "Open Source" : "Open Weight"}</span>`
+          : "";
+        const paramHtml = d.model.parameterCount
+          ? `<span style="font-size:9px;padding:2px 6px;border-radius:99px;background:rgba(139,92,246,0.12);color:#a78bfa">${d.model.parameterCount} params</span>`
+          : "";
+        const ctxHtml = d.model.contextWindow
+          ? `<span style="font-size:9px;padding:2px 6px;border-radius:99px;background:rgba(6,182,212,0.12);color:#67e8f9">${d.model.contextWindow} ctx</span>`
+          : "";
+        const modalityHtml = d.model.modality
+          ? `<span style="font-size:9px;padding:2px 6px;border-radius:99px;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.5)">${d.model.modality}</span>`
+          : "";
+
+        tooltipDiv.html(`
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+            <div style="width:8px;height:8px;border-radius:50%;background:${d.color};flex-shrink:0"></div>
+            <span style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.95)">${d.model.name}</span>
+            <span style="font-size:10px;color:rgba(255,255,255,0.35);font-family:monospace;margin-left:auto">${d.model.releaseDate}</span>
+          </div>
+          <p style="font-size:10px;color:rgba(255,255,255,0.55);line-height:1.6;margin:0 0 8px 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${d.model.description}</p>
+          <div style="display:flex;flex-wrap:wrap;gap:4px">${statusBadge}${openBadge}${paramHtml}${ctxHtml}${modalityHtml}</div>
+        `);
+
+        tooltipGroup
+          .attr("transform", `translate(${d.x},${d.y})`)
+          .style("display", null);
       })
-      .on("mouseleave", () => {
-        hoveredNodeRef.current = null;
+      .on("mouseleave", (_event, d) => {
+        if (hoveredId !== d.id) return;
+        hoveredId = null;
+
+        // Unpin node
+        d.fx = savedFx;
+        d.fy = savedFy;
+        savedFx = null;
+        savedFy = null;
+
         // Reset links
         link
-          .attr("stroke", (d) =>
-            d.type === "parent"
-              ? "rgba(255, 255, 255, 0.15)"
-              : "rgba(245, 158, 11, 0.15)"
+          .transition()
+          .duration(200)
+          .attr("stroke", (l) =>
+            l.type === "parent"
+              ? "rgba(255, 255, 255, 0.12)"
+              : "rgba(245, 158, 11, 0.12)"
           )
-          .attr("stroke-width", (d) => (d.type === "parent" ? 1.5 : 1));
-        // Reset node opacity
-        node.attr("opacity", 1);
-        setTooltipData(null);
+          .attr("stroke-width", (l) => (l.type === "parent" ? 1.5 : 1));
+
+        // Reset nodes
+        node.transition().duration(200).attr("opacity", 1);
+
+        // Hide tooltip
+        tooltipGroup.style("display", "none");
       });
 
-    // Highlight selected node
+    // ── Highlight selected node ────────────────────────────────────────────
     node.each(function (d) {
       if (d.id === selectedModelId) {
         d3.select(this)
-          .select("circle.node-circle")
+          .select(".node-shape")
           .attr("stroke-width", 3)
           .attr("stroke", "#fff");
       }
     });
 
-    // Tick handler
+    // ── Motion mode: orbital breathing ─────────────────────────────────────
+    let motionAnimFrame: number | null = null;
+    const motionStartTime = Date.now();
+
+    function animateMotion() {
+      if (!motionEnabled) return;
+      const t = (Date.now() - motionStartTime) / 1000;
+
+      node.each(function (d, i) {
+        if (hoveredId === d.id) return; // Don't animate pinned node
+        const phase = i * 0.7;
+        const amp = 2 + (d.radius / 22) * 3; // Bigger nodes = slightly more motion
+        const ox = Math.sin(t * 0.5 + phase) * amp;
+        const oy = Math.cos(t * 0.4 + phase * 1.3) * amp * 0.6;
+        d3.select(this).attr(
+          "transform",
+          `translate(${(d.x ?? 0) + ox},${(d.y ?? 0) + oy})`
+        );
+      });
+
+      motionAnimFrame = requestAnimationFrame(animateMotion);
+    }
+
+    // ── Tick handler ───────────────────────────────────────────────────────
     simulation.on("tick", () => {
       link
         .attr("x1", (d) => (d.source as GraphNode).x!)
@@ -472,10 +576,23 @@ export function ForceGraph({
         .attr("x2", (d) => (d.target as GraphNode).x!)
         .attr("y2", (d) => (d.target as GraphNode).y!);
 
-      node.attr("transform", (d) => `translate(${d.x},${d.y})`);
+      if (!motionEnabled) {
+        node.attr("transform", (d) => `translate(${d.x},${d.y})`);
+      }
+
+      // Keep tooltip pinned to hovered node
+      if (hoveredId) {
+        const hNode = nodes.find((n) => n.id === hoveredId);
+        if (hNode) {
+          tooltipGroup.attr(
+            "transform",
+            `translate(${hNode.x},${hNode.y})`
+          );
+        }
+      }
     });
 
-    // Initial zoom-to-fit after simulation settles
+    // ── Zoom-to-fit after settling ─────────────────────────────────────────
     simulation.on("end", () => {
       const padding = 60;
       let minX = Infinity,
@@ -497,31 +614,51 @@ export function ForceGraph({
           height / graphHeight,
           1.5
         );
-        const translateX =
-          width / 2 - ((minX + maxX) / 2) * scale;
-        const translateY =
-          height / 2 - ((minY + maxY) / 2) * scale;
+        const translateX = width / 2 - ((minX + maxX) / 2) * scale;
+        const translateY = height / 2 - ((minY + maxY) / 2) * scale;
 
         svg
           .transition()
           .duration(600)
           .call(
-            zoom.transform as unknown as (selection: d3.Transition<SVGSVGElement, unknown, null, undefined>) => void,
+            zoom.transform as unknown as (
+              s: d3.Transition<SVGSVGElement, unknown, null, undefined>
+            ) => void,
             d3.zoomIdentity.translate(translateX, translateY).scale(scale)
           );
       }
+
+      // Start motion after simulation settles
+      if (motionEnabled) {
+        motionAnimFrame = requestAnimationFrame(animateMotion);
+      }
     });
+
+    // ── Resize observer ────────────────────────────────────────────────────
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry) {
+        const newW = entry.contentRect.width;
+        const newH = entry.contentRect.height;
+        if (newW > 100 && newH > 100) {
+          svg.attr("width", newW).attr("height", newH);
+        }
+      }
+    });
+    observer.observe(container);
 
     return () => {
       simulation.stop();
+      observer.disconnect();
+      if (motionAnimFrame) cancelAnimationFrame(motionAnimFrame);
     };
   }, [
-    dimensions,
     familyFilter,
     searchQuery,
     selectedModelId,
     getFilteredData,
     onSelectModel,
+    motionEnabled,
   ]);
 
   return (
@@ -531,86 +668,6 @@ export function ForceGraph({
         className="w-full h-full"
         style={{ background: "transparent" }}
       />
-
-      {/* Legend */}
-      <div className="absolute bottom-4 left-4 flex flex-col gap-1.5 p-3 rounded-xl glass text-[10px] pointer-events-none">
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-[2px] bg-white/30" />
-          <span className="text-text-muted">Parent lineage</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-[2px] border-t border-dashed border-amber-500/40" />
-          <span className="text-text-muted">Influence</span>
-        </div>
-        <div className="flex items-center gap-2 mt-1">
-          <div className="w-3 h-3 rounded-full border-2 border-accent-violet bg-accent-violet/20" />
-          <span className="text-text-muted">Root model</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full border border-dashed border-white/20 bg-white/5" />
-          <span className="text-text-muted">Deprecated / Killed</span>
-        </div>
-      </div>
-
-      {/* Controls hint */}
-      <div className="absolute bottom-4 right-4 p-2.5 rounded-xl glass text-[10px] text-text-muted pointer-events-none">
-        Scroll to zoom · Drag to pan · Click nodes to explore
-      </div>
-
-      {/* Tooltip */}
-      {tooltipData && (
-        <div
-          className="absolute z-50 pointer-events-none glass-elevated rounded-xl p-3 max-w-[260px] animate-fade-in-up [animation-duration:150ms]"
-          style={{
-            left: `${Math.min(Math.max(tooltipData.x - 130, 8), dimensions.width - 280)}px`,
-            top: `${Math.max(tooltipData.y - 90, 8)}px`,
-            transition: "left 80ms ease-out, top 80ms ease-out",
-          }}
-        >
-          <div className="flex items-center gap-2 mb-1.5">
-            <div
-              className="w-2.5 h-2.5 rounded-full shrink-0"
-              style={{
-                background: (tooltipData.model.status === "deprecated" || tooltipData.model.status === "discontinued")
-                  ? "rgba(255,255,255,0.15)"
-                  : FAMILY_COLORS[tooltipData.model.family],
-              }}
-            />
-            <h4 className="text-xs font-semibold text-text-primary">
-              {tooltipData.model.name}
-            </h4>
-            {(tooltipData.model.status === "deprecated" || tooltipData.model.status === "discontinued") && (
-              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-red-500/15 text-red-400 font-medium">
-                {tooltipData.model.status === "discontinued" ? "☠ Killed" : "⚠ Deprecated"}
-              </span>
-            )}
-            <span className="text-[10px] text-text-muted font-mono ml-auto">
-              {tooltipData.model.releaseDate}
-            </span>
-          </div>
-          <p className="text-[10px] text-text-secondary leading-relaxed line-clamp-3">
-            {tooltipData.model.description}
-          </p>
-          {tooltipData.model.parameterCount && (
-            <div className="mt-1.5 text-[10px] text-text-muted">
-              <span className="text-text-secondary font-medium">
-                {tooltipData.model.parameterCount}
-              </span>{" "}
-              parameters
-            </div>
-          )}
-          <div className="flex flex-wrap gap-1 mt-1.5">
-            {tooltipData.model.innovations.slice(0, 3).map((tag) => (
-              <span
-                key={tag}
-                className="text-[9px] px-1.5 py-0.5 rounded-full bg-accent-violet/15 text-accent-violet"
-              >
-                {tag.replace(/-/g, " ")}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
