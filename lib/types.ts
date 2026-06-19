@@ -121,6 +121,18 @@ export type HardwareManufacturer =
 // Core Data Entities
 // ============================================================================
 
+/** Benchmark scores for model comparison */
+export interface BenchmarkScores {
+  mmlu?: number; // Massive Multitask Language Understanding (0-100)
+  humanEval?: number; // Code generation pass@1 (0-100)
+  math?: number; // MATH benchmark (0-100)
+  mtBench?: number; // MT-Bench chat quality (0-10)
+  arenaElo?: number; // Chatbot Arena ELO rating
+  gpqa?: number; // Graduate-level QA (0-100)
+  aime?: number; // AMC/AIME math competition (0-100)
+  swe?: number; // SWE-bench verified (0-100)
+}
+
 /** A model in the LLM family tree */
 export interface ModelNode {
   id: string;
@@ -146,6 +158,7 @@ export interface ModelNode {
   color?: string; // Brand color for visualization
   significance?: string; // 1-2 sentence "Why this model matters" story
   notableUses?: string[]; // Notable real-world applications or milestones
+  benchmarks?: BenchmarkScores; // Performance benchmark scores
 }
 
 /** A foundational research paper */

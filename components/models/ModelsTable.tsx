@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
+import Link from "next/link";
 import { models } from "@/lib/data/models";
 import { papers } from "@/lib/data/papers";
 import { FAMILY_COLORS, type ModelNode, type ModelFamily } from "@/lib/types";
@@ -367,7 +368,13 @@ function ModelRow({
               className="w-2.5 h-2.5 rounded-full flex-shrink-0"
               style={{ backgroundColor: familyColor }}
             />
-            <span className="font-medium text-text-primary">{model.name}</span>
+            <Link
+              href={`/models/${model.id}`}
+              className="font-medium text-text-primary hover:text-accent-violet transition-colors"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {model.name}
+            </Link>
           </div>
         </td>
 
@@ -551,6 +558,13 @@ function ModelRow({
 
                 {/* Links */}
                 <div className="flex flex-wrap gap-2 pt-1">
+                  <Link
+                    href={`/models/${model.id}`}
+                    className="text-xs px-3 py-1 rounded-full bg-accent-violet/10 text-accent-violet border border-accent-violet/20 hover:bg-accent-violet/20 transition-colors font-medium"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    View Full Profile →
+                  </Link>
                   {model.paperUrl && (
                     <a
                       href={model.paperUrl}
