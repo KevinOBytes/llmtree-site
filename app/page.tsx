@@ -19,6 +19,9 @@ const FAMILY_LABELS: Record<string, string> = {
   "cohere-command": "Cohere Command",
   "microsoft-phi": "Microsoft Phi",
   deepseek: "DeepSeek",
+  "stability-ai": "Stability AI",
+  midjourney: "Midjourney",
+  "image-gen": "Image Generation",
 };
 
 // Build family stats

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import * as d3 from "d3";
 import { models } from "@/lib/data/models";
-import { FAMILY_COLORS, type ModelNode, type ModelFamily } from "@/lib/types";
+import { FAMILY_COLORS, type ModelNode } from "@/lib/types";
 import {
   contextWindowToRadius,
   paramCountToSaturation,
@@ -25,21 +25,25 @@ interface GraphLink extends d3.SimulationLinkDatum<GraphNode> {
 }
 
 interface ForceGraph2DProps {
-  familyFilter: ModelFamily | "all";
+  selectedFamilies: Set<string>;
   searchQuery: string;
   onSelectModel: (model: ModelNode | null) => void;
   selectedModelId: string | null;
   motionEnabled: boolean;
+  opennessFilter?: string;
+  modalityFilter?: string;
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function ForceGraph2D({
-  familyFilter,
+  selectedFamilies,
   searchQuery,
   onSelectModel,
   selectedModelId,
   motionEnabled,
+  opennessFilter = "all",
+  modalityFilter = "all",
 }: ForceGraph2DProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -47,11 +51,14 @@ export function ForceGraph2D({
     null
   );
 
+  // Stable serialization of selectedFamilies for dependency tracking
+  const familiesKey = Array.from(selectedFamilies).sort().join(",");
+
   // Filter data
   const getFilteredData = useCallback(() => {
     let filtered = models;
-    if (familyFilter !== "all") {
-      filtered = filtered.filter((m) => m.family === familyFilter);
+    if (selectedFamilies.size > 0) {
+      filtered = filtered.filter((m) => selectedFamilies.has(m.family));
     }
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
@@ -62,8 +69,17 @@ export function ForceGraph2D({
           m.description.toLowerCase().includes(q)
       );
     }
+    if (opennessFilter === "open") {
+      filtered = filtered.filter((m) => m.openness === "open-weight" || m.openness === "open-source");
+    } else if (opennessFilter === "closed") {
+      filtered = filtered.filter((m) => m.openness === "closed");
+    }
+    if (modalityFilter !== "all") {
+      filtered = filtered.filter((m) => (m.modality ?? "text") === modalityFilter);
+    }
     return filtered;
-  }, [familyFilter, searchQuery]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [familiesKey, searchQuery, opennessFilter, modalityFilter]);
 
   // Build and render the graph
   useEffect(() => {
@@ -203,7 +219,73 @@ export function ForceGraph2D({
       .attr("r", Math.min(width, height) * 0.4)
       .attr("fill", "url(#bg-glow)");
 
+    // ── Axis labels (year markers) ─────────────────────────────────────────
+    const minYear = 2018;
+    const maxYear = 2027;
+    const axisGroup = g.append("g").attr("class", "axis-labels");
+
+    for (let year = minYear; year <= 2026; year++) {
+      const t = (year - minYear) / (maxYear - minYear);
+      const yPos = height * 0.1 + t * height * 0.8;
+
+      // Subtle horizontal guide line
+      axisGroup
+        .append("line")
+        .attr("x1", 40)
+        .attr("x2", width - 20)
+        .attr("y1", yPos)
+        .attr("y2", yPos)
+        .attr("stroke", "rgba(255,255,255,0.04)")
+        .attr("stroke-width", 1)
+        .attr("stroke-dasharray", "4 8");
+
+      // Year label
+      axisGroup
+        .append("text")
+        .text(year.toString())
+        .attr("x", 16)
+        .attr("y", yPos + 4)
+        .attr("fill", "rgba(255,255,255,0.2)")
+        .attr("font-size", "10px")
+        .attr("font-family", "var(--font-mono)")
+        .attr("text-anchor", "start");
+    }
+
+    // "Timeline" vertical label
+    axisGroup
+      .append("text")
+      .text("TIMELINE ↓")
+      .attr("x", 8)
+      .attr("y", height * 0.06)
+      .attr("fill", "rgba(255,255,255,0.25)")
+      .attr("font-size", "9px")
+      .attr("font-family", "var(--font-sans)")
+      .attr("font-weight", "600")
+      .attr("letter-spacing", "2px")
+      .attr("text-anchor", "start");
+
+    // "Family" horizontal label at bottom
+    axisGroup
+      .append("text")
+      .text("← FAMILY CLUSTERING →")
+      .attr("x", width / 2)
+      .attr("y", height - 8)
+      .attr("fill", "rgba(255,255,255,0.18)")
+      .attr("font-size", "9px")
+      .attr("font-family", "var(--font-sans)")
+      .attr("font-weight", "600")
+      .attr("letter-spacing", "2px")
+      .attr("text-anchor", "middle");
+
     // ── Force simulation ───────────────────────────────────────────────────
+    // Group models by family for horizontal clustering
+    const familyGroups: Record<string, number> = {};
+    const familyList = [...new Set(filteredModels.map((m) => m.family))];
+    familyList.forEach((f, i) => {
+      // Spread families evenly across the width
+      familyGroups[f] = ((i + 0.5) / familyList.length) * width;
+    });
+
     const simulation = d3
       .forceSimulation<GraphNode>(nodes)
       .force(
@@ -211,16 +293,22 @@ export function ForceGraph2D({
         d3
           .forceLink<GraphNode, GraphLink>(links)
           .id((d) => d.id)
-          .distance((d) => (d.type === "parent" ? 80 : 120))
-          .strength((d) => (d.type === "parent" ? 0.7 : 0.15))
+          .distance((d) => (d.type === "parent" ? 55 : 100))
+          .strength((d) => (d.type === "parent" ? 0.8 : 0.1))
       )
-      .force("charge", d3.forceManyBody().strength(-200).distanceMax(350))
-      .force("center", d3.forceCenter(width / 2, height / 2))
+      .force("charge", d3.forceManyBody().strength(-120).distanceMax(250))
       .force(
         "collision",
-        d3.forceCollide<GraphNode>().radius((d) => d.radius + 6)
+        d3.forceCollide<GraphNode>().radius((d) => d.radius + 8)
       )
-      .force("x", d3.forceX<GraphNode>(width / 2).strength(0.03))
+      // Family-based horizontal clustering
+      .force(
+        "x",
+        d3
+          .forceX<GraphNode>((d) => familyGroups[d.model.family] ?? width / 2)
+          .strength(0.08)
+      )
+      // Strong timeline-based vertical positioning
       .force(
         "y",
         d3
@@ -231,22 +319,23 @@ export function ForceGraph2D({
             const t =
               (date.getFullYear() + date.getMonth() / 12 - minYear) /
               (maxYear - minYear);
-            return height * 0.1 + t * height * 0.8;
+            return height * 0.08 + t * height * 0.84;
           })
-          .strength(0.12)
+          .strength(0.6)
       )
-      .alphaDecay(0.04)
-      .velocityDecay(0.45);
+      .alphaDecay(0.03)
+      .velocityDecay(0.5);
 
     simulationRef.current = simulation;
 
-    // ── Draw links ─────────────────────────────────────────────────────────
+    // ── Draw links (curved paths for cleaner routing) ─────────────────────
     const link = g
       .append("g")
       .attr("class", "links")
-      .selectAll("line")
+      .selectAll("path")
       .data(links)
-      .join("line")
+      .join("path")
+      .attr("fill", "none")
       .attr("stroke", (d) =>
         d.type === "parent"
           ? "rgba(255, 255, 255, 0.12)"
@@ -400,17 +489,144 @@ export function ForceGraph2D({
     let savedFx: number | null = null;
     let savedFy: number | null = null;
 
+    // ── Helper: compute full ancestry set (walk parentIds to root) ────────
+    function getAncestryIds(nodeId: string): Set<string> {
+      const ancestry = new Set<string>();
+      const visited = new Set<string>();
+      const queue = [nodeId];
+      while (queue.length > 0) {
+        const currentId = queue.shift()!;
+        if (visited.has(currentId)) continue;
+        visited.add(currentId);
+        const model = filteredModels.find((m) => m.id === currentId);
+        if (model) {
+          for (const pid of model.parentIds) {
+            if (filteredIds.has(pid)) {
+              ancestry.add(pid);
+              queue.push(pid);
+            }
+          }
+        }
+      }
+      return ancestry;
+    }
+
+    // ── Helper: compute full descendant set (walk children to leaves) ────
+    function getDescendantIds(nodeId: string): Set<string> {
+      const descendants = new Set<string>();
+      const visited = new Set<string>();
+      const queue = [nodeId];
+      while (queue.length > 0) {
+        const currentId = queue.shift()!;
+        if (visited.has(currentId)) continue;
+        visited.add(currentId);
+        for (const model of filteredModels) {
+          if (model.parentIds.includes(currentId) && !descendants.has(model.id)) {
+            descendants.add(model.id);
+            queue.push(model.id);
+          }
+        }
+      }
+      return descendants;
+    }
+
+    // ── Helper: check if a link connects two nodes in a lineage set ─────
+    function isLineageLink(
+      l: GraphLink,
+      lineageIds: Set<string>
+    ): boolean {
+      const src =
+        typeof l.source === "object"
+          ? (l.source as GraphNode).id
+          : l.source;
+      const tgt =
+        typeof l.target === "object"
+          ? (l.target as GraphNode).id
+          : l.target;
+      return lineageIds.has(src as string) && lineageIds.has(tgt as string);
+    }
+
     node
       .on("click", (_event, d) => {
         onSelectModel(d.model);
+
+        // Build full lineage set (self + ancestors + descendants)
+        const ancestryIds = getAncestryIds(d.id);
+        const descendantIds = getDescendantIds(d.id);
+        const lineageIds = new Set([d.id, ...ancestryIds, ...descendantIds]);
+
+        // Highlight lineage links with a glowing trail
+        link
+          .transition()
+          .duration(300)
+          .attr("stroke", (l) => {
+            if (l.type !== "parent") return "rgba(245, 158, 11, 0.06)";
+            if (isLineageLink(l, lineageIds)) return d.color;
+            return "rgba(255, 255, 255, 0.04)";
+          })
+          .attr("stroke-width", (l) => {
+            if (l.type !== "parent") return 0.5;
+            if (isLineageLink(l, lineageIds)) return 3;
+            return 1;
+          })
+          .attr("stroke-opacity", (l) => {
+            if (isLineageLink(l, lineageIds)) return 1;
+            return 0.3;
+          });
+
+        // Dim non-lineage nodes, keep lineage bright
+        node
+          .transition()
+          .duration(300)
+          .attr("opacity", (n) => {
+            if (lineageIds.has(n.id)) return 1;
+            return 0.12;
+          });
       })
-      .on("mouseenter", (_event, d) => {
+
+    // ── Highlight selected node & lineage ──────────────────────────────────
+    if (selectedModelId) {
+      const ancestryIds = getAncestryIds(selectedModelId);
+      const descendantIds = getDescendantIds(selectedModelId);
+      const lineageIds = new Set([selectedModelId, ...ancestryIds, ...descendantIds]);
+
+      // Highlight the selected node ring
+      node.each(function (d) {
+        if (d.id === selectedModelId) {
+          d3.select(this)
+            .select(".node-shape")
+            .attr("stroke-width", 3)
+            .attr("stroke", "#fff");
+        }
+      });
+
+      // Highlight lineage links
+      link
+        .attr("stroke", (l) => {
+          if (l.type !== "parent") return "rgba(245, 158, 11, 0.06)";
+          if (isLineageLink(l, lineageIds)) {
+            const selNode = nodes.find((n) => n.id === selectedModelId);
+            return selNode?.color ?? "rgba(255, 255, 255, 0.8)";
+          }
+          return "rgba(255, 255, 255, 0.04)";
+        })
+        .attr("stroke-width", (l) => {
+          if (l.type !== "parent") return 0.5;
+          if (isLineageLink(l, lineageIds)) return 3;
+          return 1;
+        });
+
+      // Dim non-lineage nodes
+      node.attr("opacity", (n) => (lineageIds.has(n.id) ? 1 : 0.12));
+    }
+
+    node.on("mouseenter", (_event, d) => {
         if (hoveredId === d.id) return;
         hoveredId = d.id;
 
         // Pin the node — prevents it from drifting under cursor
-        savedFx = d.fx;
-        savedFy = d.fy;
+        savedFx = d.fx ?? null;
+        savedFy = d.fy ?? null;
         d.fx = d.x;
         d.fy = d.y;
 
@@ -535,28 +751,17 @@ export function ForceGraph2D({
         tooltipGroup.style("display", "none");
       });
 
-    // ── Highlight selected node ────────────────────────────────────────────
-    node.each(function (d) {
-      if (d.id === selectedModelId) {
-        d3.select(this)
-          .select(".node-shape")
-          .attr("stroke-width", 3)
-          .attr("stroke", "#fff");
-      }
-    });
-
     // ── Motion mode: orbital breathing ─────────────────────────────────────
     let motionAnimFrame: number | null = null;
     const motionStartTime = Date.now();
 
     function animateMotion() {
-      if (!motionEnabled) return;
       const t = (Date.now() - motionStartTime) / 1000;
 
       node.each(function (d, i) {
         if (hoveredId === d.id) return; // Don't animate pinned node
         const phase = i * 0.7;
-        const amp = 2 + (d.radius / 22) * 3; // Bigger nodes = slightly more motion
+        const amp = 2 + (d.radius / 22) * 3;
         const ox = Math.sin(t * 0.5 + phase) * amp;
         const oy = Math.cos(t * 0.4 + phase * 1.3) * amp * 0.6;
         d3.select(this).attr(
@@ -568,17 +773,33 @@ export function ForceGraph2D({
       motionAnimFrame = requestAnimationFrame(animateMotion);
     }
 
+    // Start motion immediately if enabled
+    if (motionEnabled) {
+      motionAnimFrame = requestAnimationFrame(animateMotion);
+    }
+
     // ── Tick handler ───────────────────────────────────────────────────────
     simulation.on("tick", () => {
-      link
-        .attr("x1", (d) => (d.source as GraphNode).x!)
-        .attr("y1", (d) => (d.source as GraphNode).y!)
-        .attr("x2", (d) => (d.target as GraphNode).x!)
-        .attr("y2", (d) => (d.target as GraphNode).y!);
+      // Use curved paths (quadratic bezier) for cleaner link routing
+      link.attr("d", (d) => {
+        const sx = (d.source as GraphNode).x!;
+        const sy = (d.source as GraphNode).y!;
+        const tx = (d.target as GraphNode).x!;
+        const ty = (d.target as GraphNode).y!;
+        // Control point offset for curve — horizontal offset based on distance
+        const dx = tx - sx;
+        const dy = ty - sy;
+        const dr = Math.sqrt(dx * dx + dy * dy) * 0.3;
+        const midX = (sx + tx) / 2 + (dy > 0 ? dr * 0.3 : -dr * 0.3);
+        const midY = (sy + ty) / 2;
+        return `M${sx},${sy} Q${midX},${midY} ${tx},${ty}`;
+      });
 
+      // When motion is off, position nodes directly
       if (!motionEnabled) {
         node.attr("transform", (d) => `translate(${d.x},${d.y})`);
       }
+      // When motion is on, the rAF loop handles positioning with offsets
 
       // Keep tooltip pinned to hovered node
       if (hoveredId) {
@@ -627,11 +848,6 @@ export function ForceGraph2D({
             d3.zoomIdentity.translate(translateX, translateY).scale(scale)
           );
       }
-
-      // Start motion after simulation settles
-      if (motionEnabled) {
-        motionAnimFrame = requestAnimationFrame(animateMotion);
-      }
     });
 
     // ── Resize observer ────────────────────────────────────────────────────
@@ -653,7 +869,7 @@ export function ForceGraph2D({
       if (motionAnimFrame) cancelAnimationFrame(motionAnimFrame);
     };
   }, [
-    familyFilter,
+    familiesKey,
     searchQuery,
     selectedModelId,
     getFilteredData,

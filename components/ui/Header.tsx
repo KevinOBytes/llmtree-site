@@ -7,6 +7,10 @@ const NAV_ITEMS = [
   { href: "/", label: "Home" },
   { href: "/tree", label: "Model Trees" },
   { href: "/timeline", label: "Timeline" },
+  { href: "/models", label: "All Models" },
+  { href: "/papers", label: "Papers" },
+  { href: "/compare", label: "Compare" },
+  { href: "/insights", label: "Insights" },
 ] as const;
 
 export function Header() {
