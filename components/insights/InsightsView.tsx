@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useEffect, useRef, useState, type ReactNode } from "react";
+import { useMemo, useEffect, useRef, useState, useCallback, type ReactNode } from "react";
 import * as d3 from "d3";
 import { models } from "@/lib/data/models";
 import { papers } from "@/lib/data/papers";
 import { hardware } from "@/lib/data/hardware";
 import { parseContextWindow, parseDate } from "@/lib/chartUtils";
+import { AutoGlossary } from "@/components/ui/TechTerm";
 
 // ============================================================================
 // Types
@@ -50,6 +51,160 @@ function useInView(threshold = 0.15) {
 }
 
 // ============================================================================
+// Parallax scroll hook — returns a value in [-1, 1] based on element position
+// ============================================================================
+
+function useParallax() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [offset, setOffset] = useState(0);
+  const rafRef = useRef<number>(0);
+
+  useEffect(() => {
+    function onScroll() {
+      if (rafRef.current) return;
+      rafRef.current = requestAnimationFrame(() => {
+        rafRef.current = 0;
+        const el = ref.current;
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        const vh = window.innerHeight;
+        // 0 when centered, -1 when above viewport, 1 when below
+        const center = rect.top + rect.height / 2;
+        const normalized = (center - vh / 2) / (vh / 2);
+        setOffset(Math.max(-1, Math.min(1, normalized)));
+      });
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
+
+  return { ref, offset };
+}
+
+// ============================================================================
+// Animated counter — animates a stat string when visible
+// ============================================================================
+
+function AnimatedStat({ text, visible }: { text: string; visible: boolean }) {
+  const [displayLen, setDisplayLen] = useState(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (!visible) return;
+    // Reveal characters progressively
+    let current = 0;
+    intervalRef.current = setInterval(() => {
+      current += 1;
+      if (current >= text.length) {
+        setDisplayLen(text.length);
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        return;
+      }
+      setDisplayLen(current);
+    }, 18);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [visible, text]);
+
+  if (!visible) return <span className="opacity-0">{text}</span>;
+  return (
+    <>
+      <span>{text.slice(0, displayLen)}</span>
+      <span className="opacity-0">{text.slice(displayLen)}</span>
+    </>
+  );
+}
+
+// ============================================================================
+// Scroll Progress Indicator
+// ============================================================================
+
+function ScrollProgress({ insightIds }: { insightIds: string[] }) {
+  const [progress, setProgress] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const rafRef = useRef<number>(0);
+
+  useEffect(() => {
+    function onScroll() {
+      if (rafRef.current) return;
+      rafRef.current = requestAnimationFrame(() => {
+        rafRef.current = 0;
+        const els = insightIds.map((id) => document.getElementById(id)).filter(Boolean) as HTMLElement[];
+        if (els.length === 0) return;
+
+        const firstTop = els[0].getBoundingClientRect().top + window.scrollY;
+        const lastBottom = els[els.length - 1].getBoundingClientRect().bottom + window.scrollY;
+        const totalHeight = lastBottom - firstTop;
+        const scrolled = window.scrollY + window.innerHeight / 2 - firstTop;
+        setProgress(Math.max(0, Math.min(1, scrolled / totalHeight)));
+
+        // Determine active card
+        const vh = window.innerHeight;
+        let active = -1;
+        for (let i = els.length - 1; i >= 0; i--) {
+          const rect = els[i].getBoundingClientRect();
+          if (rect.top < vh * 0.6) {
+            active = i;
+            break;
+          }
+        }
+        setActiveIndex(active);
+      });
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [insightIds]);
+
+  return (
+    <div className="fixed left-4 top-1/2 -translate-y-1/2 z-40 hidden lg:flex flex-col items-center gap-0">
+      {/* Track line */}
+      <div className="relative w-0.5 bg-border-default rounded-full" style={{ height: `${insightIds.length * 28 + 20}px` }}>
+        {/* Progress fill */}
+        <div
+          className="absolute top-0 left-0 w-full rounded-full transition-[height] duration-300"
+          style={{
+            height: `${progress * 100}%`,
+            background: "linear-gradient(to bottom, #8b5cf6, #06b6d4)",
+          }}
+        />
+      </div>
+      {/* Dots for each insight */}
+      {insightIds.map((id, i) => (
+        <a
+          key={id}
+          href={`#${id}`}
+          className="absolute flex items-center justify-center"
+          style={{
+            top: `${((i + 0.5) / insightIds.length) * 100}%`,
+            transform: "translateY(-50%)",
+          }}
+          aria-label={`Go to insight ${i + 1}`}
+        >
+          <div
+            className={`
+              w-2.5 h-2.5 rounded-full border-2 transition-all duration-300
+              ${i <= activeIndex
+                ? "bg-accent-violet border-accent-violet scale-110"
+                : "bg-surface-primary border-border-hover scale-100"
+              }
+            `}
+          />
+        </a>
+      ))}
+    </div>
+  );
+}
+
+// ============================================================================
 // Mini-chart wrapper (consistent sizing)
 // ============================================================================
 
@@ -77,29 +232,69 @@ function MiniChart({ children, height = 200 }: { children: (w: number, h: number
 }
 
 // ============================================================================
-// Insight Card component
+// Insight Card component — with parallax, slide-in, animated stat & watermark
 // ============================================================================
 
 function InsightCard({ insight, index }: { insight: InsightSection; index: number }) {
-  const { ref, visible } = useInView(0.1);
+  const { ref: inViewRef, visible } = useInView(0.1);
+  const { ref: parallaxRef, offset } = useParallax();
+  const accentBarRef = useRef<HTMLDivElement>(null);
+
+  // Merge refs
+  const mergedRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      (inViewRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+      (parallaxRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+    },
+    [inViewRef, parallaxRef]
+  );
+
+  // Slide direction: odd from left, even from right
+  const slideFrom = index % 2 === 0 ? "-translate-x-8" : "translate-x-8";
+
+  // Parallax: stat moves at 0.15× rate relative to card
+  const statParallaxY = offset * 15; // px
+  // Section number watermark parallax (moves faster, opposite direction)
+  const watermarkY = offset * -25;
 
   return (
     <div
-      ref={ref}
+      ref={mergedRef}
       id={insight.id}
       className={`
         relative rounded-2xl glass overflow-hidden transition-all duration-700
-        ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}
+        ${visible ? "opacity-100 translate-x-0 translate-y-0" : `opacity-0 ${slideFrom} translate-y-8`}
       `}
-      style={{ transitionDelay: `${index * 50}ms` }}
+      style={{
+        transitionDelay: `${index * 50}ms`,
+        willChange: "transform, opacity",
+      }}
     >
-      {/* Left accent border */}
+      {/* Left accent border — animates height */}
       <div
-        className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl"
-        style={{ background: insight.accentColor }}
+        ref={accentBarRef}
+        className="absolute left-0 top-0 w-1 rounded-l-2xl transition-all duration-1000 ease-out"
+        style={{
+          background: insight.accentColor,
+          height: visible ? "100%" : "0%",
+          transitionDelay: `${index * 50 + 300}ms`,
+        }}
       />
 
-      <div className="p-6 sm:p-8 pl-7 sm:pl-10">
+      {/* Section number watermark — large, parallax, behind content */}
+      <div
+        className="absolute right-4 top-4 text-[80px] sm:text-[120px] font-black leading-none pointer-events-none select-none"
+        style={{
+          color: insight.accentColor,
+          opacity: 0.04,
+          transform: `translateY(${watermarkY}px)`,
+          willChange: "transform",
+        }}
+      >
+        #{insight.number}
+      </div>
+
+      <div className="relative z-10 p-6 sm:p-8 pl-7 sm:pl-10">
         {/* Section number */}
         <div className="text-[10px] uppercase tracking-widest text-text-muted font-medium mb-3">
           Insight #{insight.number}
@@ -110,20 +305,24 @@ function InsightCard({ insight, index }: { insight: InsightSection; index: numbe
           {insight.title}
         </h2>
 
-        {/* Big stat */}
+        {/* Big stat — parallax Y-translation + counter animation */}
         <div
           className="text-3xl sm:text-4xl lg:text-5xl font-black bg-clip-text text-transparent mb-6 leading-tight"
-          style={{ backgroundImage: insight.statGradient }}
+          style={{
+            backgroundImage: insight.statGradient,
+            transform: `translateY(${statParallaxY}px)`,
+            willChange: "transform",
+          }}
         >
-          {insight.stat}
+          <AnimatedStat text={insight.stat} visible={visible} />
         </div>
 
         {/* Chart */}
         <div className="mb-6">{insight.chart}</div>
 
-        {/* Analysis */}
+        {/* Analysis — wrapped with AutoGlossary */}
         <p className="text-sm sm:text-base text-text-secondary leading-relaxed">
-          {insight.analysis}
+          <AutoGlossary text={insight.analysis} />
         </p>
       </div>
     </div>
@@ -332,6 +531,10 @@ export function InsightsView() {
     "search-tool": "Search",
     "music-gen": "Music",
     "speech-ai": "Speech",
+    "embedding": "Embedding",
+    "safety": "Safety",
+    "robotics": "Robotics",
+    "chinese-llm": "Chinese",
   };
 
   const insights: InsightSection[] = [
@@ -844,8 +1047,13 @@ export function InsightsView() {
   // 2024 open pct for "emerging patterns"
   const openPct2026 = openPctByYear.find((y) => y.year === 2026)?.pct ?? 35;
 
+  const allInsightIds = [...insights.map((i) => i.id), "whats-next"];
+
   return (
     <div className="flex flex-col gap-10">
+      {/* Scroll Progress Indicator */}
+      <ScrollProgress insightIds={allInsightIds} />
+
       {/* Table of Contents */}
       <nav className="glass rounded-2xl p-5 sm:p-6">
         <h3 className="text-sm font-semibold text-text-muted uppercase tracking-widest mb-4">
@@ -977,7 +1185,7 @@ function WhatNextCard({
                   {p.label}
                 </div>
                 <p className="text-xs text-text-secondary leading-relaxed">
-                  {p.text}
+                  <AutoGlossary text={p.text} />
                 </p>
               </div>
             </div>

@@ -3494,6 +3494,501 @@ export const models: ModelNode[] = [
     company: "xAI",
     announcementUrl: "https://x.ai/blog/grok-1.5",
   },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // CHINESE LLM SERIES
+  // ══════════════════════════════════════════════════════════════════════════
+  {
+    id: "model-glm-4",
+    name: "GLM-4",
+    family: "chinese-llm",
+    releaseDate: "2024-01",
+    description:
+      "Zhipu AI's flagship multimodal model with 130K context window and strong tool-use capabilities. Built on the GLM (General Language Model) architecture lineage, it represents one of China's most capable closed-source models with competitive performance against GPT-4 on Chinese-language tasks.",
+    parentIds: [],
+    contextWindow: "130K",
+    architecture: "decoder-only",
+    modality: "multimodal",
+    openness: "closed",
+    innovations: ["multimodal", "long-context", "tool-use"],
+    company: "Zhipu AI",
+    apiAvailable: true,
+  },
+  {
+    id: "model-chatglm-4",
+    name: "ChatGLM-4",
+    family: "chinese-llm",
+    releaseDate: "2024-06",
+    description:
+      "The conversational variant of GLM-4, optimized for chat-based interactions with improved instruction following and safety alignment. Widely deployed across Chinese enterprise applications.",
+    parentIds: ["model-glm-4"],
+    architecture: "decoder-only",
+    modality: "multimodal",
+    openness: "closed",
+    innovations: ["multimodal", "instruction-tuning"],
+    company: "Zhipu AI",
+    apiAvailable: true,
+  },
+  {
+    id: "model-ernie-4",
+    name: "Ernie 4.0",
+    family: "chinese-llm",
+    releaseDate: "2023-10",
+    description:
+      "Baidu's flagship multimodal model, deeply integrated with Baidu's knowledge graph and search infrastructure. Excels at Chinese-language understanding and generation, with strong knowledge-enhanced capabilities that leverage Baidu's vast web data.",
+    parentIds: [],
+    modality: "multimodal",
+    openness: "closed",
+    innovations: ["multimodal", "knowledge-enhanced"],
+    company: "Baidu",
+    apiAvailable: true,
+  },
+  {
+    id: "model-baichuan-2",
+    name: "Baichuan-2",
+    family: "chinese-llm",
+    releaseDate: "2023-09",
+    description:
+      "Baichuan Inc's open-weight bilingual model available in 7B and 13B parameter sizes. Trained on 2.6 trillion tokens with strong performance on Chinese and English benchmarks, designed for both research and commercial use.",
+    parentIds: [],
+    parameterCount: "13B",
+    architecture: "decoder-only",
+    modality: "text",
+    openness: "open-weight",
+    innovations: ["open-weight"],
+    company: "Baichuan Inc",
+    variants: ["7B", "13B"],
+  },
+  {
+    id: "model-minimax-01",
+    name: "MiniMax-01",
+    family: "chinese-llm",
+    releaseDate: "2025-01",
+    description:
+      "MiniMax's open-weight sparse mixture-of-experts model with 456 billion total parameters but only 45.9 billion active per query. Features an unprecedented 4-million-token context window enabled by lightning attention — a linear attention mechanism that maintains quality over extreme sequence lengths.",
+    parentIds: [],
+    parameterCount: "456B (45.9B active)",
+    contextWindow: "4M",
+    architecture: "sparse-moe",
+    modality: "text",
+    openness: "open-weight",
+    innovations: ["mixture-of-experts", "long-context", "lightning-attention"],
+    company: "MiniMax",
+  },
+  {
+    id: "model-doubao",
+    name: "Doubao",
+    family: "chinese-llm",
+    releaseDate: "2024-05",
+    description:
+      "ByteDance's flagship multimodal AI model powering their consumer-facing AI products. Features strong tool-use capabilities and multimodal understanding, integrated across ByteDance's ecosystem of apps including Douyin (TikTok China).",
+    parentIds: [],
+    modality: "multimodal",
+    openness: "closed",
+    innovations: ["multimodal", "tool-use"],
+    company: "ByteDance",
+    apiAvailable: true,
+  },
+  {
+    id: "model-kimi-k2",
+    name: "Kimi K2",
+    family: "chinese-llm",
+    releaseDate: "2025-06",
+    description:
+      "Moonshot AI's open-weight sparse mixture-of-experts model with 1 trillion total parameters and 128K context window. Trained using the Muon optimizer and designed for agentic workflows, it represents one of the largest open-weight models available and a milestone in Chinese AI development.",
+    parentIds: [],
+    parameterCount: "1T",
+    contextWindow: "128K",
+    architecture: "sparse-moe",
+    modality: "text",
+    openness: "open-weight",
+    innovations: ["mixture-of-experts", "long-context", "agentic", "muon-optimizer"],
+    company: "Moonshot AI",
+    significance:
+      "One of the largest open-weight models ever released, demonstrating that Chinese AI labs can compete at the frontier of model scale and capability while keeping weights accessible to researchers.",
+  },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // FOUNDATIONAL RESEARCH MODELS
+  // ══════════════════════════════════════════════════════════════════════════
+  {
+    id: "model-roberta",
+    name: "RoBERTa",
+    family: "foundational",
+    releaseDate: "2019-07",
+    description:
+      "Meta's 'Robustly Optimized BERT' approach demonstrated that BERT was significantly undertrained and that careful tuning of hyperparameters and training data size could substantially improve performance. Became the go-to baseline for NLP research.",
+    parentIds: ["model-bert"],
+    contextWindow: "512",
+    architecture: "encoder-only",
+    modality: "text",
+    openness: "open-source",
+    innovations: ["masked-lm", "scaling-laws"],
+    company: "Meta",
+    paperUrl: "https://arxiv.org/abs/1907.11692",
+    significance:
+      "Proved that BERT's training recipe mattered as much as its architecture, establishing best practices for pre-training that influenced all subsequent encoder models.",
+  },
+  {
+    id: "model-t5",
+    name: "T5",
+    family: "foundational",
+    releaseDate: "2019-10",
+    description:
+      "Google's 'Text-to-Text Transfer Transformer' unified all NLP tasks into a single text-to-text format — translation, summarization, classification, and question answering all became 'given this text input, produce this text output.' Available up to 11 billion parameters and became one of the most influential architectures in NLP history.",
+    parentIds: ["model-bert"],
+    parameterCount: "11B",
+    contextWindow: "512",
+    architecture: "encoder-decoder",
+    modality: "text",
+    openness: "open-source",
+    innovations: ["instruction-tuning", "scaling-laws"],
+    company: "Google",
+    paperUrl: "https://arxiv.org/abs/1910.10683",
+    significance:
+      "Unified all NLP tasks into a single text-to-text framework, proving that a single model architecture could handle any language task when framed as text generation.",
+  },
+  {
+    id: "model-xlnet",
+    name: "XLNet",
+    family: "foundational",
+    releaseDate: "2019-06",
+    description:
+      "A model from Google and Carnegie Mellon that combined the best of autoregressive (GPT-style) and autoencoding (BERT-style) approaches using permutation-based language modeling. Outperformed BERT on 20 tasks when released.",
+    parentIds: ["model-bert"],
+    architecture: "decoder-only",
+    modality: "text",
+    openness: "open-source",
+    innovations: ["permutation-lm", "autoregressive"],
+    company: "Google / CMU",
+    paperUrl: "https://arxiv.org/abs/1906.08237",
+  },
+  {
+    id: "model-albert",
+    name: "ALBERT",
+    family: "foundational",
+    releaseDate: "2019-09",
+    description:
+      "Google's 'A Lite BERT' that dramatically reduced BERT's parameter count through cross-layer parameter sharing and factorized embedding parameterization — achieving comparable performance with 18× fewer parameters.",
+    parentIds: ["model-bert"],
+    architecture: "encoder-only",
+    modality: "text",
+    openness: "open-source",
+    innovations: ["parameter-sharing", "masked-lm"],
+    company: "Google",
+    paperUrl: "https://arxiv.org/abs/1909.11942",
+  },
+  {
+    id: "model-distilbert",
+    name: "DistilBERT",
+    family: "foundational",
+    releaseDate: "2019-10",
+    description:
+      "Hugging Face's distilled version of BERT that retains 97% of BERT's language understanding capability while being 60% smaller and 60% faster. One of the first successful applications of knowledge distillation to large language models.",
+    parentIds: ["model-bert"],
+    parameterCount: "66M",
+    architecture: "encoder-only",
+    modality: "text",
+    openness: "open-source",
+    innovations: ["distillation", "masked-lm"],
+    company: "Hugging Face",
+    paperUrl: "https://arxiv.org/abs/1910.01108",
+  },
+  {
+    id: "model-deberta",
+    name: "DeBERTa",
+    family: "foundational",
+    releaseDate: "2020-06",
+    description:
+      "Microsoft's 'Decoding-enhanced BERT with disentangled Attention' introduced a novel attention mechanism that separately encodes content and position information, then combines them with a disentangled attention matrix. First model to surpass human performance on the SuperGLUE benchmark.",
+    parentIds: ["model-bert"],
+    architecture: "encoder-only",
+    modality: "text",
+    openness: "open-source",
+    innovations: ["disentangled-attention", "masked-lm"],
+    company: "Microsoft",
+    paperUrl: "https://arxiv.org/abs/2006.03654",
+    significance:
+      "First model to surpass human baseline on the SuperGLUE benchmark, proving that architectural innovations in attention mechanisms could push NLU beyond human-level.",
+  },
+  {
+    id: "model-flan-t5",
+    name: "FLAN-T5",
+    family: "foundational",
+    releaseDate: "2022-10",
+    description:
+      "Google's instruction-tuned version of T5, fine-tuned on over 1,800 tasks described via natural language instructions. Demonstrated that instruction tuning dramatically improves zero-shot and few-shot performance across virtually all NLP tasks.",
+    parentIds: ["model-t5"],
+    architecture: "encoder-decoder",
+    modality: "text",
+    openness: "open-source",
+    innovations: ["instruction-tuning", "few-shot"],
+    company: "Google",
+    paperUrl: "https://arxiv.org/abs/2210.11416",
+    significance:
+      "Showed that instruction tuning at scale could make smaller models competitive with much larger ones, influencing the development of efficient fine-tuning techniques across the industry.",
+  },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // EMBEDDING MODELS
+  // ══════════════════════════════════════════════════════════════════════════
+  {
+    id: "model-text-embedding-3",
+    name: "text-embedding-3",
+    family: "embedding",
+    releaseDate: "2024-01",
+    description:
+      "OpenAI's third-generation text embedding model that converts text into numerical vectors for semantic search, clustering, and retrieval applications. Available in 'small' and 'large' variants with configurable output dimensions, enabling developers to balance performance and cost.",
+    parentIds: [],
+    modality: "text",
+    openness: "closed",
+    innovations: ["embedding"],
+    company: "OpenAI",
+    apiAvailable: true,
+    variants: ["Small", "Large"],
+  },
+  {
+    id: "model-bge",
+    name: "BGE",
+    family: "embedding",
+    releaseDate: "2023-08",
+    description:
+      "BAAI's (Beijing Academy of Artificial Intelligence) open-source embedding model family that quickly became one of the most popular choices for retrieval-augmented generation (RAG) and semantic search. Competitive with proprietary embedding models while being freely available.",
+    parentIds: [],
+    modality: "text",
+    openness: "open-source",
+    innovations: ["embedding", "retrieval"],
+    company: "BAAI",
+    significance:
+      "Democratized high-quality text embeddings by providing open-source models that rivaled proprietary offerings, becoming a cornerstone of the open-source RAG ecosystem.",
+  },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // SAFETY / GUARDRAIL MODELS
+  // ══════════════════════════════════════════════════════════════════════════
+  {
+    id: "model-llama-guard-3",
+    name: "Llama Guard 3",
+    family: "safety",
+    releaseDate: "2024-07",
+    description:
+      "Meta's purpose-built safety classifier based on LLaMA 3.1, designed to detect harmful content in both user prompts and model responses. Classifies inputs across safety categories like violence, hate speech, and sexual content, enabling developers to build guardrails into their AI applications.",
+    parentIds: ["model-llama3.1"],
+    parameterCount: "8B",
+    architecture: "decoder-only",
+    modality: "text",
+    openness: "open-weight",
+    innovations: ["safety-classifier"],
+    company: "Meta",
+  },
+  {
+    id: "model-shieldgemma",
+    name: "ShieldGemma",
+    family: "safety",
+    releaseDate: "2024-06",
+    description:
+      "Google's open-source safety classifier built on Gemma 2, designed to filter harmful content in both LLM inputs and outputs. Supports customizable safety policies and content categories, enabling developers to tune safety behavior to their application's needs.",
+    parentIds: ["model-gemma2"],
+    architecture: "decoder-only",
+    modality: "text",
+    openness: "open-source",
+    innovations: ["safety-classifier"],
+    company: "Google",
+  },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // ROBOTICS / EMBODIED AI MODELS
+  // ══════════════════════════════════════════════════════════════════════════
+  {
+    id: "model-rt2",
+    name: "RT-2",
+    family: "robotics",
+    releaseDate: "2023-07",
+    description:
+      "Google DeepMind's Robotics Transformer 2 that bridges language understanding and physical robot actions. Converts vision-language model outputs directly into robot motor commands, enabling robots to follow natural language instructions and reason about their physical environment.",
+    parentIds: ["model-palm2"],
+    modality: "multimodal",
+    openness: "closed",
+    innovations: ["multimodal", "robotics", "vision-language-action"],
+    company: "Google DeepMind",
+    paperUrl: "https://arxiv.org/abs/2307.15818",
+    significance:
+      "First model to demonstrate that large vision-language models could directly control robots, translating web-scale knowledge into physical actions without task-specific training.",
+  },
+  {
+    id: "model-palm-e",
+    name: "PaLM-E",
+    family: "robotics",
+    releaseDate: "2023-03",
+    description:
+      "Google's 562-billion-parameter embodied multimodal model that combines PaLM's language understanding with visual and sensor inputs for robotic planning. The largest vision-language model at the time of release, capable of understanding scenes and generating plans for robots to execute.",
+    parentIds: ["model-palm"],
+    parameterCount: "562B",
+    modality: "multimodal",
+    openness: "closed",
+    innovations: ["multimodal", "robotics", "embodied"],
+    company: "Google",
+    paperUrl: "https://arxiv.org/abs/2303.03378",
+    significance:
+      "Demonstrated that scaling up embodied language models enables transfer of knowledge across different robot embodiments and tasks, showing positive transfer from web-scale language and vision data.",
+  },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // COMMUNITY / DERIVATIVE MODELS
+  // ══════════════════════════════════════════════════════════════════════════
+  {
+    id: "model-alpaca",
+    name: "Alpaca",
+    family: "community",
+    releaseDate: "2023-03",
+    description:
+      "Stanford's instruction-tuned version of LLaMA that demonstrated you could create a ChatGPT-like model for under $600. Fine-tuned on 52K instruction-following examples generated by GPT-3.5, it proved that high-quality instruction tuning data matters more than model scale for conversational ability.",
+    parentIds: ["model-llama1"],
+    parameterCount: "7B",
+    architecture: "decoder-only",
+    modality: "text",
+    openness: "open-source",
+    innovations: ["instruction-tuning", "distillation"],
+    company: "Stanford",
+    significance:
+      "Proved that fine-tuning an open model on synthetic instruction data could replicate much of ChatGPT's conversational ability for under $600, sparking a wave of community-driven model development.",
+  },
+  {
+    id: "model-vicuna",
+    name: "Vicuna",
+    family: "community",
+    releaseDate: "2023-03",
+    description:
+      "LMSYS's instruction-tuned LLaMA model trained on ~70K conversations shared by ChatGPT users on ShareGPT. Evaluated by GPT-4 as achieving over 90% of ChatGPT's quality, it became one of the most popular open-source chat models and helped establish the LMSys Chatbot Arena evaluation platform.",
+    parentIds: ["model-llama1"],
+    parameterCount: "13B",
+    architecture: "decoder-only",
+    modality: "text",
+    openness: "open-source",
+    innovations: ["instruction-tuning"],
+    company: "LMSYS",
+    significance:
+      "Helped establish the LMSYS Chatbot Arena, which became the gold standard for evaluating and comparing language models through blind human preference voting.",
+  },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // CODING / AGENTIC TOOLS
+  // ══════════════════════════════════════════════════════════════════════════
+  {
+    id: "model-autogpt",
+    name: "AutoGPT",
+    family: "coding-tool",
+    releaseDate: "2023-03",
+    description:
+      "One of the first autonomous AI agent frameworks, capable of breaking down goals into subtasks, executing them independently, and iterating on results without continuous human guidance. Became the fastest-growing GitHub repository in history at the time, sparking massive interest in AI agents.",
+    parentIds: [],
+    modality: "text",
+    openness: "open-source",
+    innovations: ["agentic", "tool-use", "autonomous-agent"],
+    company: "Significant Gravitas",
+    significance:
+      "Became the fastest-growing GitHub repository in history, demonstrating that AI agents capable of autonomous multi-step reasoning and action execution captured massive developer interest.",
+  },
+  {
+    id: "model-swe-agent",
+    name: "SWE-Agent",
+    family: "coding-tool",
+    releaseDate: "2024-04",
+    description:
+      "Princeton's autonomous software engineering agent that can independently navigate codebases, identify bugs, and submit fixes as pull requests. Introduced a custom agent-computer interface (ACI) optimized for language models to interact with code repositories effectively.",
+    parentIds: [],
+    modality: "text",
+    openness: "open-source",
+    innovations: ["agentic", "code-generation", "tool-use"],
+    company: "Princeton",
+    paperUrl: "https://arxiv.org/abs/2405.15793",
+  },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // MISTRAL DERIVATIVES
+  // ══════════════════════════════════════════════════════════════════════════
+  {
+    id: "model-pixtral-large",
+    name: "Pixtral Large",
+    family: "mistral",
+    releaseDate: "2024-11",
+    description:
+      "Mistral's 124-billion-parameter open-weight multimodal model that combines strong language capabilities with advanced vision understanding. Features a 128K context window and can process both text and images natively, positioning it as a competitive open alternative to GPT-4V and Gemini.",
+    parentIds: ["model-mistral-large"],
+    parameterCount: "124B",
+    contextWindow: "128K",
+    architecture: "decoder-only",
+    modality: "multimodal",
+    openness: "open-weight",
+    innovations: ["multimodal", "open-weight"],
+    company: "Mistral AI",
+  },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // IMAGE / VIDEO GENERATION
+  // ══════════════════════════════════════════════════════════════════════════
+  {
+    id: "model-pika",
+    name: "Pika",
+    family: "image-gen",
+    releaseDate: "2023-06",
+    description:
+      "An AI video generation platform that creates and edits videos from text prompts, images, or existing video clips. Known for its accessible interface and creative editing features, it helped popularize AI-generated video content among creators.",
+    parentIds: [],
+    modality: "video",
+    openness: "closed",
+    innovations: ["text-to-video", "diffusion"],
+    company: "Pika",
+    apiAvailable: true,
+  },
+  {
+    id: "model-kling",
+    name: "Kling",
+    family: "image-gen",
+    releaseDate: "2024-06",
+    description:
+      "Kuaishou's AI video generation model capable of producing high-quality, long-form videos up to 2 minutes from text descriptions. Features strong motion consistency and physics understanding, making it one of the most capable video generation models from a Chinese tech company.",
+    parentIds: [],
+    modality: "video",
+    openness: "closed",
+    innovations: ["text-to-video", "diffusion", "long-form-video"],
+    company: "Kuaishou",
+    apiAvailable: true,
+  },
+  {
+    id: "model-luma-dream-machine",
+    name: "Luma Dream Machine",
+    family: "image-gen",
+    releaseDate: "2024-06",
+    description:
+      "Luma AI's video generation model with strong 3D spatial understanding, capable of generating physically consistent video content from text or image prompts. Its 3D-aware generation produces more realistic camera movements and object interactions than purely 2D diffusion approaches.",
+    parentIds: [],
+    modality: "video",
+    openness: "closed",
+    innovations: ["text-to-video", "diffusion", "3d-aware"],
+    company: "Luma AI",
+    apiAvailable: true,
+  },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // SPEECH / AUDIO MODELS
+  // ══════════════════════════════════════════════════════════════════════════
+  {
+    id: "model-vall-e",
+    name: "VALL-E",
+    family: "speech-ai",
+    releaseDate: "2023-01",
+    description:
+      "Microsoft's neural codec language model for text-to-speech that can clone any voice from just a 3-second audio sample. Treats speech synthesis as a language modeling problem, generating audio codec codes from text and a brief voice prompt, enabling zero-shot voice cloning with remarkable fidelity.",
+    parentIds: [],
+    modality: "audio",
+    openness: "closed",
+    innovations: ["text-to-audio", "zero-shot", "speech-synthesis"],
+    company: "Microsoft",
+    paperUrl: "https://arxiv.org/abs/2301.02111",
+    significance:
+      "Reframed speech synthesis as a language modeling problem, showing that the same autoregressive approach powering LLMs could generate remarkably natural speech from just a 3-second voice sample.",
+  },
 ];
 
 // Quick lookup maps

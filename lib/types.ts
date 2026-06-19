@@ -50,7 +50,23 @@ export type InnovationTag =
   | "text-to-image"
   | "text-to-audio"
   | "text-to-video"
-  | "speech-recognition";
+  | "speech-recognition"
+  | "embedding"
+  | "retrieval"
+  | "safety-classifier"
+  | "robotics"
+  | "vision-language-action"
+  | "embodied"
+  | "autonomous-agent"
+  | "knowledge-enhanced"
+  | "lightning-attention"
+  | "muon-optimizer"
+  | "parameter-sharing"
+  | "disentangled-attention"
+  | "permutation-lm"
+  | "speech-synthesis"
+  | "3d-aware"
+  | "long-form-video";
 
 /** Model family identifiers */
 export type ModelFamily =
@@ -84,7 +100,11 @@ export type ModelFamily =
   | "inflection"
   | "search-tool"
   | "music-gen"
-  | "speech-ai";
+  | "speech-ai"
+  | "embedding"
+  | "safety"
+  | "robotics"
+  | "chinese-llm";
 
 /** Hardware manufacturer */
 export type HardwareManufacturer =
@@ -233,6 +253,10 @@ export const FAMILY_COLORS: Record<ModelFamily, string> = {
   "search-tool": "#22D3EE", // Cyan for search products
   "music-gen": "#F59E0B", // Warm amber for music
   "speech-ai": "#A78BFA", // Soft purple for voice/speech
+  "embedding": "#14B8A6", // Teal for embedding models
+  "safety": "#EF4444", // Red for safety/guardrail models
+  "robotics": "#84CC16", // Lime green for robotics
+  "chinese-llm": "#F43F5E", // Rose for Chinese LLMs
 };
 
 export const HARDWARE_COLORS: Record<HardwareManufacturer, string> = {
