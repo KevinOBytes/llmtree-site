@@ -133,6 +133,7 @@ export const models: ModelNode[] = [
     variants: ["GPT-3.5", "GPT-3.5 Turbo", "GPT-3.5 Turbo 16K"],
     significance: "Brought AI to the mainstream. Reached 100 million users in 2 months — the fastest-growing consumer application in history at the time. Sparked a global AI arms race among tech companies.",
     notableUses: ["Reached 100 million users faster than any consumer app in history", "Triggered Google to declare a 'code red' and accelerate AI efforts", "Used by students, writers, and professionals worldwide for writing, brainstorming, and learning", "Inspired every major tech company to launch competing AI chatbots"],
+    benchmarks: { mmlu: 70.0, humanEval: 48.1 },
   },
   {
     id: "model-gpt4",
@@ -156,6 +157,7 @@ export const models: ModelNode[] = [
     variants: ["GPT-4", "GPT-4 32K"],
     significance: "First multimodal frontier model that could process both text and images. Passed the bar exam and scored in the 90th percentile on the SAT, demonstrating expert-level reasoning across many domains.",
     notableUses: ["Passed the Uniform Bar Exam in the 90th percentile", "Scored 90th percentile on the SAT", "Powered Bing Chat, Duolingo Max, and Khan Academy's AI tutor Khanmigo", "First model widely adopted for professional legal, medical, and financial tasks"],
+    benchmarks: { mmlu: 86.4, humanEval: 67.0 },
   },
   {
     id: "model-gpt4-turbo",
@@ -195,6 +197,7 @@ export const models: ModelNode[] = [
     announcementUrl: "https://openai.com/index/hello-gpt-4o/",
     significance: "Made frontier-level AI available for free by dramatically reducing costs. First model to natively understand and generate across text, vision, and audio in real time, enabling natural voice conversations with AI.",
     notableUses: ["Enabled real-time voice conversations in ChatGPT", "Made GPT-4-level intelligence available to free users", "Powered the ChatGPT desktop app launch"],
+    benchmarks: { mmlu: 88.7, humanEval: 90.2, math: 76.6, gpqa: 53.6 },
   },
   {
     id: "model-gpt4o-mini",
@@ -232,6 +235,7 @@ export const models: ModelNode[] = [
     apiAvailable: true,
     announcementUrl: "https://openai.com/index/gpt-4-1/",
     variants: ["GPT-4.1", "GPT-4.1 Mini", "GPT-4.1 Nano"],
+    benchmarks: { swe: 55.0 },
   },
   {
     id: "model-gpt4.5",
@@ -250,6 +254,7 @@ export const models: ModelNode[] = [
     company: "OpenAI",
     apiAvailable: true,
     announcementUrl: "https://openai.com/index/gpt-4-5-system-card/",
+    benchmarks: { mmlu: 85.1, gpqa: 71.4, swe: 38.0 },
   },
   {
     id: "model-gpt5",
@@ -369,6 +374,7 @@ export const models: ModelNode[] = [
     variants: ["o1", "o1-mini", "o1-preview"],
     significance: "Pioneered the 'thinking model' paradigm, proving that letting AI reason longer at inference time dramatically improves performance on hard problems. Opened an entirely new scaling dimension beyond just training bigger models.",
     notableUses: ["Achieved expert-level performance on PhD-level science questions", "Scored in the 89th percentile on competitive programming (Codeforces)", "Ranked in the top 500 students in the USA Math Olympiad qualifier"],
+    benchmarks: { aime: 83.3, gpqa: 78.0, swe: 48.9 },
   },
   {
     id: "model-o3",
@@ -388,6 +394,7 @@ export const models: ModelNode[] = [
     variants: ["o3", "o3-mini", "o3-pro"],
     significance: "Set new records on virtually every major reasoning benchmark. The o3-pro variant demonstrated that scaling test-time compute could achieve near-human expert performance on the most challenging scientific and mathematical problems.",
     notableUses: ["Achieved a new high score on ARC-AGI, a benchmark designed to test general reasoning", "Outperformed PhD-level experts on graduate science exams", "Set state-of-the-art on competitive math olympiad problems"],
+    benchmarks: { aime: 96.7, gpqa: 87.7, swe: 71.7 },
   },
   {
     id: "model-o4-mini",
@@ -406,6 +413,7 @@ export const models: ModelNode[] = [
     company: "OpenAI",
     apiAvailable: true,
     announcementUrl: "https://openai.com/index/introducing-o3-and-o4-mini/",
+    benchmarks: { aime: 95.2, gpqa: 83.3 },
   },
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -472,6 +480,7 @@ export const models: ModelNode[] = [
     variants: ["Opus", "Sonnet", "Haiku"],
     significance: "First model family to seriously challenge GPT-4's dominance across reasoning, coding, and multilingual tasks. Introduced Anthropic's tiered model strategy that became the industry standard.",
     notableUses: ["Claude 3 Opus outperformed GPT-4 on multiple academic benchmarks", "First Claude model with vision capabilities", "Haiku became one of the fastest models available for production use"],
+    benchmarks: { mmlu: 86.8, humanEval: 84.9, gpqa: 50.4 },
   },
   {
     id: "model-claude3.5-sonnet",
@@ -491,6 +500,7 @@ export const models: ModelNode[] = [
     announcementUrl: "https://www.anthropic.com/news/claude-3-5-sonnet",
     significance: "Redefined expectations for mid-tier models by outperforming its own flagship (Opus) at a fraction of the cost. Became the most widely used Claude model and a developer favorite for coding tasks.",
     notableUses: ["Became the default model in Cursor and other AI coding tools", "First model to offer 'computer use' — controlling a desktop like a human", "Top-ranked on coding benchmarks like SWE-bench"],
+    benchmarks: { mmlu: 88.7, humanEval: 92.0, gpqa: 59.4 },
   },
   {
     id: "model-claude3.5-haiku",
@@ -508,6 +518,7 @@ export const models: ModelNode[] = [
     company: "Anthropic",
     apiAvailable: true,
     announcementUrl: "https://www.anthropic.com/news/3-5-models-and-computer-use",
+    benchmarks: { humanEval: 88.1, math: 69.4, gpqa: 41.6 },
   },
   {
     id: "model-claude4",
@@ -529,6 +540,7 @@ export const models: ModelNode[] = [
     variants: ["Opus 4", "Sonnet 4"],
     significance: "Marked the beginning of the 'agentic era' for Claude, with models capable of working independently on complex, long-running tasks for hours. Opus 4 set new standards for AI-assisted software engineering.",
     notableUses: ["Powers Claude Code for autonomous software development", "First Claude model with extended thinking for multi-step reasoning", "Used for sustained 30+ hour agentic coding sessions"],
+    benchmarks: { swe: 72.0 },
   },
   {
     id: "model-claude4.5-sonnet",
@@ -547,6 +559,7 @@ export const models: ModelNode[] = [
     apiAvailable: true,
     announcementUrl: "https://www.anthropic.com/news/claude-4-5-sonnet",
     notableUses: ["Achieved 77.2% on SWE-bench Verified at launch", "Introduced checkpoints for Claude Code sessions"],
+    benchmarks: { swe: 77.2 },
   },
   {
     id: "model-claude4.6",
@@ -704,6 +717,7 @@ export const models: ModelNode[] = [
     variants: ["Pro", "Flash"],
     significance: "Shattered context window records with 1M tokens (later 2M), enabling entirely new use cases like analyzing full codebases or hour-long videos in a single prompt. Proved that mixture-of-experts could enable practical ultra-long-context processing.",
     notableUses: ["First model to process 1 million tokens of context", "Can analyze hour-long videos and full codebases in one prompt", "Flash variant became one of the most cost-effective frontier models"],
+    benchmarks: { mmlu: 85.9, math: 86.5, gpqa: 59.1 },
   },
   {
     id: "model-gemini-2",
@@ -723,6 +737,7 @@ export const models: ModelNode[] = [
     variants: ["Flash", "Pro"],
     significance: "Shifted Google's AI strategy from answering questions to taking actions. Introduced native tool use, allowing the model to autonomously search the web, execute code, and interact with external services.",
     notableUses: ["Powers Google's Deep Research feature for autonomous research", "Introduced Multimodal Live API for real-time audio/video streaming", "Flash variant became default in Gemini app"],
+    benchmarks: { math: 89.7, gpqa: 62.1 },
   },
   {
     id: "model-gemini-2.5",
@@ -742,6 +757,7 @@ export const models: ModelNode[] = [
     variants: ["Pro", "Flash"],
     significance: "Google's entry into the 'thinking model' category, competing with OpenAI's o-series and Anthropic's extended thinking. Topped the LMArena leaderboard at launch.",
     notableUses: ["Debuted at #1 on LMArena leaderboard", "Flash variant offered thinking capabilities at much lower cost"],
+    benchmarks: { aime: 86.7, gpqa: 84.0, swe: 63.8 },
   },
   {
     id: "model-gemini-3.1",
@@ -881,6 +897,7 @@ export const models: ModelNode[] = [
     variants: ["8B", "70B", "405B"],
     significance: "The 405B model was the largest openly available language model at launch, proving that open-weight models could compete head-to-head with the best closed systems like GPT-4o.",
     notableUses: ["Largest open-weight model at time of release (405B)", "First open model to rival GPT-4o", "Adopted as distillation teacher for smaller open models"],
+    benchmarks: { mmlu: 88.6, humanEval: 85.3, math: 73.8 },
   },
   {
     id: "model-llama3.2",
@@ -919,6 +936,7 @@ export const models: ModelNode[] = [
     apiAvailable: true,
     announcementUrl: "https://ai.meta.com/blog/llama-3-3-70b/",
     notableUses: ["Matches 405B-level performance at a fraction of compute cost", "Strong multilingual text generation"],
+    benchmarks: { mmlu: 86.0, humanEval: 88.4, math: 77.0 },
   },
   {
     id: "model-llama4",
@@ -939,6 +957,7 @@ export const models: ModelNode[] = [
     variants: ["Scout", "Maverick"],
     significance: "First LLaMA to adopt Mixture-of-Experts architecture, offering a 10-million-token context window — the largest of any open model — while remaining efficient enough to run on a single server node.",
     notableUses: ["10M token context window — largest of any open model", "First open MoE model from Meta", "Native multimodal: text, image, and video understanding"],
+    benchmarks: { gpqa: 69.8 },
   },
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -983,6 +1002,7 @@ export const models: ModelNode[] = [
     announcementUrl: "https://mistral.ai/news/mixtral-of-experts/",
     significance: "Proved that Mixture-of-Experts architecture could match GPT-3.5 quality at a fraction of the compute cost, making frontier-level AI accessible to run on consumer hardware.",
     notableUses: ["Matched GPT-3.5 Turbo quality as a fully open model", "Demonstrated MoE efficiency: 13B-speed with 47B-quality", "Widely adopted for self-hosted enterprise deployments"],
+    benchmarks: { mmlu: 70.6, humanEval: 40.2 },
   },
   {
     id: "model-mistral-large",
@@ -1002,6 +1022,7 @@ export const models: ModelNode[] = [
     announcementUrl: "https://mistral.ai/news/mistral-large-2407/",
     significance: "Established Mistral AI as a credible competitor to frontier labs by delivering near-GPT-4-level performance in an open-weight package, particularly excelling in multilingual and code tasks.",
     notableUses: ["Near-GPT-4 performance as an open-weight model", "Strong multilingual support across dozens of languages", "Powers Mistral's Le Chat conversational assistant"],
+    benchmarks: { mmlu: 84.0, humanEval: 92.0 },
   },
   {
     id: "model-mistral-small4",
@@ -1094,6 +1115,7 @@ export const models: ModelNode[] = [
     variants: ["Grok-3", "Grok-3 Mini"],
     significance: "Demonstrated that massive compute infrastructure (100K H100 GPUs) could produce a frontier model competitive with the best from OpenAI and Google, establishing xAI as a serious player.",
     notableUses: ["Trained on 100K H100 GPU Colossus supercluster", "Think mode for step-by-step extended reasoning", "DeepSearch for comprehensive research tasks", "Top scores on math and science benchmarks (AIME, GPQA)"],
+    benchmarks: { aime: 93.3, gpqa: 84.6 },
   },
   {
     id: "model-grok4",
@@ -1292,6 +1314,7 @@ export const models: ModelNode[] = [
     variants: ["Phi-4 (14B)", "Phi-4-mini (3.8B)", "Phi-4-multimodal (5.6B)", "Phi-4-reasoning"],
     significance: "Proved that small models could compete with frontier models on complex STEM reasoning, and expanded the Phi line into multimodal and dedicated reasoning capabilities.",
     notableUses: ["Advanced math and science problem solving", "Multimodal reasoning across speech, vision, and text", "Competed with much larger reasoning models on STEM benchmarks"],
+    benchmarks: { mmlu: 84.8, humanEval: 82.6 },
   },
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -1354,6 +1377,7 @@ export const models: ModelNode[] = [
     announcementUrl: "https://api-docs.deepseek.com/news/news1226",
     significance: "Trained for just $5.5 million, proving frontier performance doesn't require billions in compute. Shook the AI industry's assumption that only big tech could compete.",
     notableUses: ["Matched GPT-4 level performance at a fraction of training cost", "Caused significant stock market reactions in AI chip companies", "Demonstrated FP8 training at scale for the first time"],
+    benchmarks: { mmlu: 88.5, humanEval: 82.6, math: 90.2 },
   },
   {
     id: "model-deepseek-r1",
@@ -1375,6 +1399,7 @@ export const models: ModelNode[] = [
     significance: "First open-source reasoning model. Demonstrated that chain-of-thought reasoning could be trained into any model, not just proprietary ones. Its release democratized advanced reasoning capabilities.",
     notableUses: ["First open-weight model to match OpenAI o1 on reasoning benchmarks", "Distilled versions brought reasoning to models as small as 1.5B parameters", "Sparked a wave of open-source reasoning model development"],
     variants: ["R1", "R1-Distill-Qwen-1.5B", "R1-Distill-Qwen-7B", "R1-Distill-Qwen-14B", "R1-Distill-Qwen-32B", "R1-Distill-Llama-8B", "R1-Distill-Llama-70B"],
+    benchmarks: { mmlu: 90.8, math: 97.3, aime: 79.8 },
   },
   {
     id: "model-deepseek-v4-pro",
@@ -1472,6 +1497,7 @@ export const models: ModelNode[] = [
     variants: ["Qwen2.5", "Qwen2.5-Coder", "Qwen2.5-Math"],
     significance: "Became the most downloaded open-source LLM globally, overtaking Meta's LLaMA. Its Apache 2.0 license and specialized coding/math variants made it the go-to base model for the open-source community.",
     notableUses: ["Most downloaded open-source LLM on Hugging Face", "Base model for DeepSeek R1 distilled variants", "Best-in-class open-source coding model"],
+    benchmarks: { mmlu: 86.8, humanEval: 86.6, math: 83.1 },
   },
   {
     id: "model-qwen3",
@@ -1569,6 +1595,7 @@ export const models: ModelNode[] = [
     variants: ["2B", "9B", "27B"],
     significance: "Set a new standard for small model efficiency. The 27B variant competed with models 2-3x its size, proving that distillation from larger Gemini models was a viable strategy for building capable small models.",
     notableUses: ["27B model ranked highly on LMSYS Chatbot Arena despite its small size", "Included ShieldGemma safety classifiers and Gemma Scope interpretability tools"],
+    benchmarks: { mmlu: 75.2, humanEval: 51.8 },
   },
   {
     id: "model-gemma3",
@@ -1588,6 +1615,7 @@ export const models: ModelNode[] = [
     variants: ["1B", "4B", "12B", "27B"],
     significance: "Brought multimodal capabilities to the open-weight world at accessible sizes. Proved that small, downloadable models could understand images and handle very long documents.",
     notableUses: ["Supports 140+ languages for multilingual applications", "ShieldGemma 2 safety classifier included for responsible deployment"],
+    benchmarks: { math: 69.0, gpqa: 42.4 },
   },
   {
     id: "model-gemma4",
