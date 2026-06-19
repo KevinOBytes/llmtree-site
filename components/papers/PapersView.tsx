@@ -5,6 +5,7 @@ import Link from "next/link";
 import { papers, papersById } from "@/lib/data/papers";
 import { modelsById } from "@/lib/data/models";
 import type { PaperNode, InnovationTag } from "@/lib/types";
+import { GLOSSARY, INNOVATION_LABELS } from "@/lib/glossary";
 
 // ── Era metadata ────────────────────────────────────────────────────────────
 
@@ -72,94 +73,6 @@ const ERA_ORDER: Era[] = [
   "alignment",
   "reasoning",
 ];
-
-// ── Innovation labels (matching ModelDetailPanel) ───────────────────────────
-
-const INNOVATION_LABELS: Record<string, string> = {
-  transformer: "Transformer",
-  autoregressive: "Autoregressive",
-  "masked-lm": "Masked LM",
-  rlhf: "RLHF",
-  "constitutional-ai": "Constitutional AI",
-  "chain-of-thought": "Chain-of-Thought",
-  "mixture-of-experts": "MoE",
-  multimodal: "Multimodal",
-  "long-context": "Long Context",
-  "instruction-tuning": "Instruction Tuning",
-  "few-shot": "Few-Shot",
-  "zero-shot": "Zero-Shot",
-  "tool-use": "Tool Use",
-  agentic: "Agentic",
-  reasoning: "Reasoning",
-  "code-generation": "Code Gen",
-  "open-weight": "Open Weight",
-  distillation: "Distillation",
-  "scaling-laws": "Scaling Laws",
-  "attention-mechanism": "Attention",
-  "test-time-compute": "Test-Time Compute",
-  abliteration: "Abliteration",
-  diffusion: "Diffusion",
-  "text-to-image": "Text-to-Image",
-  "text-to-audio": "Text-to-Audio",
-  "text-to-video": "Text-to-Video",
-  "speech-recognition": "Speech Recognition",
-};
-
-const INNOVATION_DEFINITIONS: Record<string, string> = {
-  autoregressive:
-    "Generates text one token at a time, each prediction based on all previous tokens.",
-  transformer:
-    "Neural network architecture using self-attention to process entire sequences in parallel.",
-  "zero-shot":
-    "Performing tasks without any examples — the model generalizes from its training alone.",
-  "few-shot":
-    "Learning from just a handful of examples provided in the prompt, without retraining.",
-  "scaling-laws":
-    "Mathematical relationships showing how model performance improves predictably with more data, compute, and parameters.",
-  "code-generation":
-    "Ability to write, debug, and understand programming code across multiple languages.",
-  rlhf: "Reinforcement Learning from Human Feedback — training models to align with human preferences.",
-  "instruction-tuning":
-    "Fine-tuning a model on instruction-response pairs so it follows user commands more reliably.",
-  multimodal:
-    "Processing multiple types of input (text, images, audio, video) in a single model.",
-  "mixture-of-experts":
-    "Architecture where only a fraction of the model's parameters are active for each input.",
-  "long-context":
-    "Ability to process very long inputs (100K+ tokens), enabling analysis of entire codebases or books.",
-  "tool-use":
-    "Ability to call external tools, APIs, and functions — enabling web browsing and code execution.",
-  distillation:
-    "Training a smaller 'student' model to mimic a larger 'teacher' model.",
-  reasoning:
-    "Structured step-by-step problem solving, often using chain-of-thought approaches.",
-  "chain-of-thought":
-    "Prompting technique where the model 'thinks out loud' step by step before answering.",
-  "test-time-compute":
-    "Using extra computation during inference to improve answer quality.",
-  agentic:
-    "Models that can autonomously plan, execute multi-step tasks, and self-correct.",
-  "constitutional-ai":
-    "Anthropic's approach where the model critiques and revises its own outputs against principles.",
-  "open-weight":
-    "Model weights are publicly released but training data/code may not be.",
-  "attention-mechanism":
-    "The core innovation of Transformers — allowing each token to 'attend to' every other token.",
-  abliteration:
-    "Removing safety guardrails through targeted fine-tuning or weight manipulation.",
-  diffusion:
-    "Generates outputs by gradually denoising random noise into coherent images/audio.",
-  "text-to-image":
-    "Generating images from text descriptions — the technology behind DALL·E and Stable Diffusion.",
-  "text-to-audio":
-    "Generating speech, music, or sound effects from text descriptions.",
-  "text-to-video":
-    "Generating video clips from text descriptions.",
-  "speech-recognition":
-    "Converting spoken audio into text (automatic speech recognition / ASR).",
-  "masked-lm":
-    "Training by randomly hiding words and having the model predict them — BERT's key innovation.",
-};
 
 // ── Component ───────────────────────────────────────────────────────────────
 
@@ -543,9 +456,9 @@ const PaperCard = forwardRef<
               >
                 {INNOVATION_LABELS[tag] ?? tag}
                 {/* Tooltip */}
-                {hoveredTag === tag && INNOVATION_DEFINITIONS[tag] && (
+                {hoveredTag === tag && GLOSSARY[tag] && (
                   <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded-lg bg-surface-elevated text-text-secondary text-[11px] leading-relaxed w-56 text-left shadow-xl border border-border-default z-50 pointer-events-none">
-                    {INNOVATION_DEFINITIONS[tag]}
+                    {GLOSSARY[tag]}
                   </span>
                 )}
               </span>

@@ -3,6 +3,7 @@
 import { FAMILY_COLORS, type ModelNode } from "@/lib/types";
 import { models } from "@/lib/data/models";
 import { papers } from "@/lib/data/papers";
+import { GLOSSARY, INNOVATION_LABELS } from "@/lib/glossary";
 
 interface ModelDetailPanelProps {
   model: ModelNode;
@@ -10,35 +11,7 @@ interface ModelDetailPanelProps {
   onSelectModel?: (model: ModelNode) => void;
 }
 
-const INNOVATION_LABELS: Record<string, string> = {
-  transformer: "Transformer",
-  autoregressive: "Autoregressive",
-  "masked-lm": "Masked LM",
-  rlhf: "RLHF",
-  "constitutional-ai": "Constitutional AI",
-  "chain-of-thought": "Chain-of-Thought",
-  "mixture-of-experts": "MoE",
-  multimodal: "Multimodal",
-  "long-context": "Long Context",
-  "instruction-tuning": "Instruction Tuning",
-  "few-shot": "Few-Shot",
-  "zero-shot": "Zero-Shot",
-  "tool-use": "Tool Use",
-  agentic: "Agentic",
-  reasoning: "Reasoning",
-  "code-generation": "Code Gen",
-  "open-weight": "Open Weight",
-  distillation: "Distillation",
-  "scaling-laws": "Scaling Laws",
-  "attention-mechanism": "Attention",
-  "test-time-compute": "Test-Time Compute",
-  abliteration: "Abliteration",
-  diffusion: "Diffusion",
-  "text-to-image": "Text-to-Image",
-  "text-to-audio": "Text-to-Audio",
-  "text-to-video": "Text-to-Video",
-  "speech-recognition": "Speech Recognition",
-};
+
 
 const ERA_STYLES: Record<string, { label: string; color: string }> = {
   "pre-transformer": { label: "Pre-Transformer", color: "text-zinc-400 bg-zinc-500/10 border-zinc-500/20" },
@@ -50,61 +23,7 @@ const ERA_STYLES: Record<string, { label: string; color: string }> = {
   diffusion: { label: "Diffusion", color: "text-pink-400 bg-pink-500/10 border-pink-500/20" },
 };
 
-const INNOVATION_DEFINITIONS: Record<string, string> = {
-  autoregressive:
-    "Generates text one token at a time, each prediction based on all previous tokens. The foundation of modern language models.",
-  transformer:
-    "Neural network architecture using self-attention to process entire sequences in parallel. Replaced RNNs and enabled massive scaling.",
-  "zero-shot":
-    "Performing tasks without any examples — the model generalizes from its training alone.",
-  "few-shot":
-    "Learning from just a handful of examples provided in the prompt, without retraining.",
-  "scaling-laws":
-    "Mathematical relationships showing how model performance improves predictably with more data, compute, and parameters.",
-  "code-generation":
-    "Ability to write, debug, and understand programming code across multiple languages.",
-  rlhf: "Reinforcement Learning from Human Feedback — training models to align with human preferences by having humans rank outputs.",
-  "instruction-tuning":
-    "Fine-tuning a model on instruction-response pairs so it follows user commands more reliably.",
-  multimodal:
-    "Processing multiple types of input (text, images, audio, video) in a single model.",
-  "mixture-of-experts":
-    "Architecture where only a fraction of the model's parameters are active for each input, allowing massive scale with lower compute.",
-  "long-context":
-    "Ability to process very long inputs (100K+ tokens), enabling analysis of entire codebases or books.",
-  "tool-use":
-    "Ability to call external tools, APIs, and functions — enabling web browsing, code execution, and real-world actions.",
-  distillation:
-    "Training a smaller 'student' model to mimic a larger 'teacher' model, preserving capability at lower cost.",
-  reasoning:
-    "Structured step-by-step problem solving, often using chain-of-thought or tree-of-thought approaches.",
-  "chain-of-thought":
-    "Prompting technique where the model 'thinks out loud' step by step before giving a final answer.",
-  "test-time-compute":
-    "Using extra computation during inference (not training) to improve answer quality — thinking longer on harder problems.",
-  agentic:
-    "Models that can autonomously plan, execute multi-step tasks, use tools, and self-correct without human intervention.",
-  "constitutional-ai":
-    "Anthropic's approach to AI safety where the model critiques and revises its own outputs against a set of principles.",
-  "open-weight":
-    "Model weights are publicly released but training data/code may not be. Enables fine-tuning but not full reproduction.",
-  "attention-mechanism":
-    "The core innovation of Transformers — allowing each token to 'attend to' every other token to capture relationships.",
-  abliteration:
-    "Removing safety guardrails from a model through targeted fine-tuning or weight manipulation. Controversial but popular in open-source community.",
-  diffusion:
-    "Generates outputs by gradually denoising random noise into coherent images/audio. The backbone of Stable Diffusion and DALL·E.",
-  "text-to-image":
-    "Generating images from text descriptions — the technology behind DALL·E, Midjourney, and Stable Diffusion.",
-  "text-to-audio":
-    "Generating speech, music, or sound effects from text descriptions.",
-  "text-to-video":
-    "Generating video clips from text descriptions — one of the newest and most compute-intensive AI capabilities.",
-  "speech-recognition":
-    "Converting spoken audio into text (automatic speech recognition / ASR).",
-  "masked-lm":
-    "Training by randomly hiding words and having the model predict them — BERT's key innovation for understanding context.",
-};
+
 
 const MODALITY_ICONS: Record<string, string> = {
   text: "T",
@@ -363,7 +282,7 @@ export function ModelDetailPanel({
             <div className="flex flex-wrap gap-1.5">
               {model.innovations.map((tag) => {
                 const label = INNOVATION_LABELS[tag] ?? tag;
-                const definition = INNOVATION_DEFINITIONS[tag];
+                const definition = GLOSSARY[tag];
                 return (
                   <div key={tag} className="group/tip relative inline-block">
                     <span

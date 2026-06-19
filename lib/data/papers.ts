@@ -613,6 +613,282 @@ export const papers: PaperNode[] = [
     innovations: ["open-weight", "rlhf", "instruction-tuning"],
     era: "scaling",
   },
+
+  // ── Architecture Innovations (additional) ──────────────────────────────────
+  {
+    id: "paper-rope",
+    title:
+      "RoFormer: Enhanced Transformer with Rotary Position Embedding",
+    shortTitle: "RoPE",
+    authors: "Su et al.",
+    year: 2021,
+    month: 4,
+    institution: "Zhuiyi Technology",
+    contribution:
+      "Introduced rotary position embeddings that encode position via rotation matrices, enabling better length generalization. Used by virtually every modern LLM.",
+    significance:
+      "RoPE replaced absolute and learned position embeddings as the standard. LLaMA, Qwen, Mistral, and most modern models use it.",
+    arxivUrl: "https://arxiv.org/abs/2104.09864",
+    parentIds: ["paper-transformer"],
+    relatedModelIds: [
+      "model-llama1",
+      "model-llama2",
+      "model-llama3",
+      "model-llama3.1",
+      "model-llama3.2",
+      "model-llama3.3",
+      "model-llama4",
+      "model-mistral-7b",
+      "model-mixtral",
+      "model-qwen1",
+      "model-qwen2",
+      "model-qwen2.5",
+      "model-qwen3",
+    ],
+    innovations: ["attention-mechanism", "long-context"],
+    era: "architecture",
+  },
+  {
+    id: "paper-gqa",
+    title:
+      "GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints",
+    shortTitle: "Grouped-Query Attention",
+    authors: "Ainslie et al.",
+    year: 2023,
+    month: 5,
+    institution: "Google Research",
+    contribution:
+      "Introduced grouped-query attention as a middle ground between multi-head and multi-query attention, reducing KV cache memory while maintaining quality.",
+    significance:
+      "GQA is now standard in LLaMA 2+, Mistral, Gemma, and nearly all efficient modern LLMs.",
+    arxivUrl: "https://arxiv.org/abs/2305.13245",
+    parentIds: ["paper-transformer"],
+    relatedModelIds: [
+      "model-llama2",
+      "model-llama3",
+      "model-llama3.1",
+      "model-llama3.2",
+      "model-llama3.3",
+      "model-llama4",
+      "model-mistral-7b",
+      "model-mixtral",
+      "model-mistral-large",
+      "model-gemma1",
+      "model-gemma2",
+      "model-gemma3",
+    ],
+    innovations: ["attention-mechanism"],
+    era: "architecture",
+  },
+  {
+    id: "paper-swiglu",
+    title: "GLU Variants Improve Transformer",
+    shortTitle: "SwiGLU",
+    authors: "Shazeer",
+    year: 2020,
+    month: 2,
+    institution: "Google",
+    contribution:
+      "Showed that SwiGLU activation (Swish + Gated Linear Unit) significantly improves Transformer FFN quality with minimal compute overhead.",
+    significance:
+      "SwiGLU became the default FFN activation in PaLM, LLaMA, Mistral, and most modern Transformers, replacing ReLU and GELU.",
+    arxivUrl: "https://arxiv.org/abs/2002.05202",
+    parentIds: ["paper-transformer"],
+    relatedModelIds: [
+      "model-llama1",
+      "model-llama2",
+      "model-llama3",
+      "model-palm",
+      "model-palm2",
+      "model-mistral-7b",
+      "model-mixtral",
+    ],
+    innovations: ["transformer"],
+    era: "architecture",
+  },
+
+  // ── Scaling Era (additional) ───────────────────────────────────────────────
+  {
+    id: "paper-gpt4",
+    title: "GPT-4 Technical Report",
+    shortTitle: "GPT-4",
+    authors: "OpenAI",
+    year: 2023,
+    month: 3,
+    institution: "OpenAI",
+    contribution:
+      "Described GPT-4's multimodal capabilities and performance across professional/academic benchmarks, setting new SOTA on bar exam, MMLU, and many others.",
+    significance:
+      "First model to convincingly pass professional exams and demonstrate broad multimodal reasoning, catalyzing widespread enterprise AI adoption.",
+    arxivUrl: "https://arxiv.org/abs/2303.08774",
+    parentIds: ["paper-gpt3"],
+    relatedModelIds: [
+      "model-gpt4",
+      "model-gpt4-turbo",
+      "model-gpt4o",
+      "model-gpt4o-mini",
+    ],
+    innovations: ["multimodal", "scaling-laws", "rlhf"],
+    era: "scaling",
+  },
+  {
+    id: "paper-gemini",
+    title: "Gemini: A Family of Highly Capable Multimodal Models",
+    shortTitle: "Gemini",
+    authors: "Gemini Team, Google DeepMind",
+    year: 2023,
+    month: 12,
+    institution: "Google DeepMind",
+    contribution:
+      "Introduced the Gemini family with native multimodal training from the ground up, achieving SOTA on 30+ benchmarks.",
+    significance:
+      "First model family natively trained on interleaved text, image, audio, and video from inception, rather than bolting on vision post hoc.",
+    arxivUrl: "https://arxiv.org/abs/2312.11805",
+    parentIds: ["paper-transformer"],
+    relatedModelIds: [
+      "model-gemini-1",
+      "model-gemini-1.5",
+      "model-gemini-2",
+      "model-gemini-2.5",
+    ],
+    innovations: ["multimodal", "scaling-laws", "mixture-of-experts"],
+    era: "scaling",
+  },
+  {
+    id: "paper-mistral-7b",
+    title: "Mistral 7B",
+    shortTitle: "Mistral 7B",
+    authors: "Jiang et al.",
+    year: 2023,
+    month: 10,
+    institution: "Mistral AI",
+    contribution:
+      "Introduced sliding window attention and demonstrated that a 7B model could outperform LLaMA 2 13B on all benchmarks.",
+    significance:
+      "Proved that architectural innovations matter more than raw scale. Kickstarted Mistral AI as a major open-weight competitor.",
+    arxivUrl: "https://arxiv.org/abs/2310.06825",
+    parentIds: ["paper-llama"],
+    relatedModelIds: [
+      "model-mistral-7b",
+      "model-mixtral",
+      "model-mistral-large",
+    ],
+    innovations: ["long-context", "attention-mechanism"],
+    era: "scaling",
+  },
+  {
+    id: "paper-megatron-lm",
+    title:
+      "Megatron-LM: Training Multi-Billion Parameter Language Models Using Model Parallelism",
+    shortTitle: "Megatron-LM",
+    authors: "Shoeybi et al.",
+    year: 2019,
+    month: 9,
+    institution: "NVIDIA",
+    contribution:
+      "Pioneered efficient model parallelism techniques enabling training of multi-billion parameter Transformers across GPUs.",
+    significance:
+      "Established the blueprint for distributed training at scale. Megatron's parallelism strategies underpin most large-model training frameworks today.",
+    arxivUrl: "https://arxiv.org/abs/1909.08053",
+    parentIds: ["paper-transformer"],
+    relatedModelIds: [
+      "model-megatron-turing",
+      "model-nemotron4-15b",
+      "model-nemotron4-340b",
+      "model-nemotron3-nano",
+      "model-nemotron3-super",
+      "model-nemotron3-ultra",
+    ],
+    innovations: ["scaling-laws"],
+    era: "scaling",
+  },
+
+  // ── Transformer Era (additional) ───────────────────────────────────────────
+  {
+    id: "paper-roberta",
+    title: "RoBERTa: A Robustly Optimized BERT Pretraining Approach",
+    shortTitle: "RoBERTa",
+    authors: "Liu et al.",
+    year: 2019,
+    month: 7,
+    institution: "Meta AI",
+    contribution:
+      "Showed BERT was significantly undertrained; by optimizing training procedure (more data, longer training, no NSP), achieved much better results.",
+    significance:
+      "Demonstrated that training methodology matters as much as architecture. Influenced all subsequent pretraining optimization research.",
+    arxivUrl: "https://arxiv.org/abs/1907.11692",
+    parentIds: ["paper-bert"],
+    relatedModelIds: [],
+    innovations: ["masked-lm", "scaling-laws"],
+    era: "transformer",
+  },
+
+  // ── Diffusion Era (additional) ─────────────────────────────────────────────
+  {
+    id: "paper-imagen",
+    title:
+      "Photorealistic Text-to-Image Diffusion Models with Deep Language Understanding",
+    shortTitle: "Imagen",
+    authors: "Saharia et al.",
+    year: 2022,
+    month: 5,
+    institution: "Google Brain",
+    contribution:
+      "Demonstrated that large frozen text encoders (T5-XXL) with cascaded diffusion models produce photorealistic images, outperforming DALL·E 2.",
+    significance:
+      "Proved that language understanding is the key bottleneck for text-to-image quality, shifting the field toward larger text encoders.",
+    arxivUrl: "https://arxiv.org/abs/2205.11487",
+    parentIds: ["paper-ddpm", "paper-t5"],
+    relatedModelIds: ["model-imagen2", "model-imagen3"],
+    innovations: ["diffusion", "text-to-image"],
+    era: "diffusion",
+  },
+
+  // ── Efficient Inference ────────────────────────────────────────────────────
+  {
+    id: "paper-gptq",
+    title:
+      "GPTQ: Accurate Post-Training Quantization for Generative Pre-trained Transformers",
+    shortTitle: "GPTQ",
+    authors: "Frantar et al.",
+    year: 2022,
+    month: 10,
+    institution: "IST Austria",
+    contribution:
+      "Pioneered post-training quantization to 4-bit for large language models with minimal quality loss, enabling consumer GPU inference.",
+    significance:
+      "Democratized LLM inference by making it possible to run 30B+ parameter models on a single consumer GPU. Widely adopted by the open-source community.",
+    arxivUrl: "https://arxiv.org/abs/2210.17323",
+    parentIds: ["paper-gpt3"],
+    relatedModelIds: [],
+    innovations: ["distillation"],
+    era: "architecture",
+  },
+
+  // ── Reasoning Era (additional) ─────────────────────────────────────────────
+  {
+    id: "paper-deepseek-r1",
+    title:
+      "DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning",
+    shortTitle: "DeepSeek-R1",
+    authors: "DeepSeek-AI",
+    year: 2025,
+    month: 1,
+    institution: "DeepSeek AI",
+    contribution:
+      "Demonstrated that pure RL training (without supervised fine-tuning on reasoning traces) can produce chain-of-thought reasoning, achieving performance comparable to OpenAI o1.",
+    significance:
+      "Showed an alternative path to reasoning capabilities without relying on proprietary training data. The distilled models outperformed many larger models.",
+    arxivUrl: "https://arxiv.org/abs/2501.12948",
+    parentIds: ["paper-dpo", "paper-chain-of-thought"],
+    relatedModelIds: [
+      "model-deepseek-r1",
+      "model-deepseek-v3",
+      "model-deepseek-r1-uncensored",
+    ],
+    innovations: ["reasoning", "chain-of-thought", "test-time-compute"],
+    era: "reasoning",
+  },
 ];
 
 // Quick lookup map

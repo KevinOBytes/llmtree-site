@@ -63,6 +63,10 @@ const FAMILY_LABELS: Record<string, string> = {
   "coding-tool": "Coding Tools",
   community: "Community / Uncensored",
   foundational: "Foundational",
+  "embedding": "Embedding Models",
+  "safety": "Safety / Guardrails",
+  "robotics": "Robotics / Embodied",
+  "chinese-llm": "Chinese LLMs",
 };
 
 /** Families with models that have non-zero counts */
