@@ -4,7 +4,7 @@ import { useState } from "react";
 import { FAMILY_COLORS } from "@/lib/types";
 
 // ============================================================================
-// VisualizationLegend — Educational guide to visual encodings
+// VisualizationLegend — Comprehensive visual guide to all encodings
 // ============================================================================
 
 interface VisualizationLegendProps {
@@ -12,24 +12,82 @@ interface VisualizationLegendProps {
   motionEnabled: boolean;
 }
 
-/** Subset of families shown in the legend for brevity */
-const LEGEND_FAMILIES: { family: keyof typeof FAMILY_COLORS; label: string }[] =
-  [
-    { family: "openai-gpt", label: "GPT" },
-    { family: "anthropic-claude", label: "Claude" },
-    { family: "google-gemini", label: "Gemini" },
-    { family: "meta-llama", label: "LLaMA" },
-    { family: "deepseek", label: "DeepSeek" },
-  ];
+/** All families grouped logically for display */
+const FAMILY_GROUPS: {
+  group: string;
+  families: { family: keyof typeof FAMILY_COLORS; label: string }[];
+}[] = [
+  {
+    group: "Major Providers",
+    families: [
+      { family: "openai-gpt", label: "GPT" },
+      { family: "openai-o", label: "OpenAI o-series" },
+      { family: "anthropic-claude", label: "Claude" },
+      { family: "google-gemini", label: "Gemini" },
+      { family: "meta-llama", label: "LLaMA" },
+      { family: "deepseek", label: "DeepSeek" },
+      { family: "mistral", label: "Mistral" },
+      { family: "xai-grok", label: "Grok" },
+      { family: "alibaba-qwen", label: "Qwen" },
+    ],
+  },
+  {
+    group: "Enterprise",
+    families: [
+      { family: "cohere-command", label: "Cohere" },
+      { family: "microsoft-phi", label: "Phi" },
+      { family: "tii-falcon", label: "Falcon" },
+      { family: "amazon-nova", label: "Nova" },
+      { family: "nvidia-nemotron", label: "NVIDIA" },
+      { family: "ibm", label: "IBM" },
+    ],
+  },
+  {
+    group: "Specialized",
+    families: [
+      { family: "coding-tool", label: "Coding" },
+      { family: "search-tool", label: "Search/RAG" },
+      { family: "music-gen", label: "Music" },
+      { family: "speech-ai", label: "Speech" },
+    ],
+  },
+  {
+    group: "Open / Community",
+    families: [
+      { family: "google-gemma", label: "Gemma" },
+      { family: "google-palm", label: "PaLM" },
+      { family: "01ai-yi", label: "Yi" },
+      { family: "allen-ai", label: "Allen AI" },
+      { family: "community", label: "Community" },
+      { family: "foundational", label: "Foundational" },
+    ],
+  },
+  {
+    group: "Creative",
+    families: [
+      { family: "stability-ai", label: "Stability AI" },
+      { family: "midjourney", label: "Midjourney" },
+      { family: "image-gen", label: "Image Gen" },
+    ],
+  },
+  {
+    group: "Other",
+    families: [
+      { family: "apple", label: "Apple" },
+      { family: "ai21-jamba", label: "AI21" },
+      { family: "inflection", label: "Inflection" },
+    ],
+  },
+];
 
 export function VisualizationLegend({
   viewDimension,
 }: VisualizationLegendProps) {
-  const [collapsed, setCollapsed] = useState(true);
+  const [collapsed, setCollapsed] = useState(false);
 
   return (
     <div
-      className="absolute bottom-4 left-4 z-30 max-w-[260px] select-none"
+      className="absolute bottom-4 left-4 z-30 max-w-[320px] select-none"
       role="complementary"
       aria-label="Visualization legend"
     >
@@ -98,21 +156,32 @@ export function VisualizationLegend({
           `}
         >
           <div className="overflow-hidden">
-            <div className="px-3 pb-3 space-y-3 stagger">
-              {/* ── 1. Color → Family ────────────────────────────────── */}
+            <div className="px-3 pb-3 space-y-3 stagger max-h-[60vh] overflow-y-auto scrollbar-thin">
+              {/* ── 1. Color → Family (grouped, multi-column) ──────────── */}
               <LegendSection title="Color → Family">
-                <div className="flex flex-wrap gap-x-3 gap-y-1">
-                  {LEGEND_FAMILIES.map(({ family, label }) => (
-                    <span
-                      key={family}
-                      className="flex items-center gap-1 text-[10px] text-text-secondary"
-                    >
-                      <span
-                        className="inline-block w-2 h-2 rounded-full shrink-0"
-                        style={{ backgroundColor: FAMILY_COLORS[family] }}
-                      />
-                      {label}
-                    </span>
+                <div className="space-y-1.5">
+                  {FAMILY_GROUPS.map(({ group, families }) => (
+                    <div key={group}>
+                      <p className="text-[8px] uppercase tracking-widest text-text-muted/60 mb-0.5">
+                        {group}
+                      </p>
+                      <div className="grid grid-cols-3 gap-x-2 gap-y-0.5">
+                        {families.map(({ family, label }) => (
+                          <span
+                            key={family}
+                            className="flex items-center gap-1 text-[9px] text-text-secondary leading-tight"
+                          >
+                            <span
+                              className="inline-block w-1.5 h-1.5 rounded-full shrink-0"
+                              style={{
+                                backgroundColor: FAMILY_COLORS[family],
+                              }}
+                            />
+                            {label}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   ))}
                 </div>
               </LegendSection>
@@ -128,10 +197,13 @@ export function VisualizationLegend({
 
               {/* ── 3. Shape → Modality ───────────────────────────────── */}
               <LegendSection title="Shape → Modality">
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-x-3 gap-y-1">
                   <ShapeLabel shape="circle" label="Text" />
                   <ShapeLabel shape="diamond" label="Multimodal" />
                   <ShapeLabel shape="hexagon" label="Code" />
+                  <ShapeLabel shape="square" label="Image" />
+                  <ShapeLabel shape="triangle" label="Audio" />
+                  <ShapeLabel shape="octagon" label="Video" />
                 </div>
               </LegendSection>
 
@@ -146,21 +218,81 @@ export function VisualizationLegend({
 
               {/* ── 5. Glow → Status ─────────────────────────────────── */}
               <LegendSection title="Glow → Status">
-                <div className="flex gap-4">
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+                  {/* Active */}
                   <span className="flex items-center gap-1.5 text-[10px] text-text-secondary">
                     <span className="inline-block w-2.5 h-2.5 rounded-full bg-accent-violet shadow-[0_0_6px_rgba(139,92,246,0.7)]" />
                     Active
                   </span>
+                  {/* Deprecated */}
                   <span className="flex items-center gap-1.5 text-[10px] text-text-secondary">
                     <span className="inline-block w-2.5 h-2.5 rounded-full bg-accent-violet/30" />
                     Deprecated
+                  </span>
+                  {/* Discontinued */}
+                  <span className="flex items-center gap-1.5 text-[10px] text-text-secondary">
+                    <span className="relative inline-flex items-center justify-center w-2.5 h-2.5 shrink-0">
+                      <span className="absolute inset-0 rounded-full bg-red-500/20" />
+                      <svg width="8" height="8" viewBox="0 0 8 8" className="relative">
+                        <line
+                          x1="1.5"
+                          y1="1.5"
+                          x2="6.5"
+                          y2="6.5"
+                          stroke="#ef4444"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                        />
+                        <line
+                          x1="6.5"
+                          y1="1.5"
+                          x2="1.5"
+                          y2="6.5"
+                          stroke="#ef4444"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    </span>
+                    Discontinued
+                  </span>
+                  {/* Legacy */}
+                  <span className="flex items-center gap-1.5 text-[10px] text-text-secondary">
+                    <span className="relative inline-flex items-center justify-center w-2.5 h-2.5 shrink-0">
+                      <span className="absolute inset-0 rounded-full bg-text-muted/20" />
+                      <svg
+                        width="8"
+                        height="8"
+                        viewBox="0 0 10 10"
+                        fill="none"
+                        className="relative text-text-muted"
+                      >
+                        <rect
+                          x="1"
+                          y="3"
+                          width="8"
+                          height="5.5"
+                          rx="0.8"
+                          stroke="currentColor"
+                          strokeWidth="1"
+                        />
+                        <path
+                          d="M3 3V2a2 2 0 0 1 4 0v1"
+                          stroke="currentColor"
+                          strokeWidth="1"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    </span>
+                    Legacy
                   </span>
                 </div>
               </LegendSection>
 
               {/* ── 6. Ring → Openness ────────────────────────────────── */}
               <LegendSection title="Ring → Openness">
-                <div className="flex gap-4">
+                <div className="flex flex-wrap gap-x-4 gap-y-1">
+                  {/* Closed */}
                   <span className="flex items-center gap-1.5 text-[10px] text-text-secondary">
                     <svg width="12" height="12" viewBox="0 0 12 12">
                       <circle
@@ -174,6 +306,7 @@ export function VisualizationLegend({
                     </svg>
                     Closed
                   </span>
+                  {/* Open-weight */}
                   <span className="flex items-center gap-1.5 text-[10px] text-text-secondary">
                     <svg width="12" height="12" viewBox="0 0 12 12">
                       <circle
@@ -188,10 +321,61 @@ export function VisualizationLegend({
                     </svg>
                     Open-weight
                   </span>
+                  {/* Open-source */}
+                  <span className="flex items-center gap-1.5 text-[10px] text-text-secondary">
+                    <svg width="12" height="12" viewBox="0 0 12 12">
+                      <circle
+                        cx="6"
+                        cy="6"
+                        r="5"
+                        fill="none"
+                        stroke="#22c55e"
+                        strokeWidth="2"
+                      />
+                    </svg>
+                    Open-source
+                  </span>
                 </div>
               </LegendSection>
 
-              {/* ── 7. Depth → Release date (3D only) ────────────────── */}
+              {/* ── 7. Line Type → Relationship ──────────────────────── */}
+              <LegendSection title="Line → Relationship">
+                <div className="flex flex-wrap gap-x-4 gap-y-1">
+                  {/* Solid = parent/child */}
+                  <span className="flex items-center gap-1.5 text-[10px] text-text-secondary">
+                    <svg width="24" height="6" viewBox="0 0 24 6">
+                      <line
+                        x1="0"
+                        y1="3"
+                        x2="24"
+                        y2="3"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    Direct lineage
+                  </span>
+                  {/* Dashed = influence */}
+                  <span className="flex items-center gap-1.5 text-[10px] text-text-secondary">
+                    <svg width="24" height="6" viewBox="0 0 24 6">
+                      <line
+                        x1="0"
+                        y1="3"
+                        x2="24"
+                        y2="3"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeDasharray="3 3"
+                      />
+                    </svg>
+                    Influence
+                  </span>
+                </div>
+              </LegendSection>
+
+              {/* ── 8. Depth → Release date (3D only) ────────────────── */}
               {viewDimension === "3d" && (
                 <LegendSection title="Depth → Release Date">
                   <div className="flex items-center gap-2">
@@ -242,7 +426,13 @@ function ShapeLabel({
   shape,
   label,
 }: {
-  shape: "circle" | "diamond" | "hexagon";
+  shape:
+    | "circle"
+    | "diamond"
+    | "hexagon"
+    | "square"
+    | "triangle"
+    | "octagon";
   label: string;
 }) {
   const shapeElement = (() => {
@@ -280,6 +470,40 @@ function ShapeLabel({
             <polygon
               points="7,0.5 13,3 13,9 7,11.5 1,9 1,3"
               fill="var(--color-accent-emerald)"
+              opacity="0.7"
+            />
+          </svg>
+        );
+      case "square":
+        return (
+          <svg width="12" height="12" viewBox="0 0 12 12">
+            <rect
+              x="1"
+              y="1"
+              width="10"
+              height="10"
+              rx="1.5"
+              fill="var(--color-accent-rose)"
+              opacity="0.7"
+            />
+          </svg>
+        );
+      case "triangle":
+        return (
+          <svg width="12" height="12" viewBox="0 0 12 12">
+            <polygon
+              points="6,1 11,10.5 1,10.5"
+              fill="var(--color-accent-amber)"
+              opacity="0.7"
+            />
+          </svg>
+        );
+      case "octagon":
+        return (
+          <svg width="12" height="12" viewBox="0 0 12 12">
+            <polygon
+              points="4,0.5 8,0.5 11.5,4 11.5,8 8,11.5 4,11.5 0.5,8 0.5,4"
+              fill="var(--color-accent-cyan)"
               opacity="0.7"
             />
           </svg>

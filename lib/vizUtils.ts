@@ -171,6 +171,28 @@ export function getModalityShape(
         ].join(" ");
         return { type: "polygon", points: pts };
       }
+    case "image":
+      // Square (canvas / frame)
+      {
+        const s = r * 0.85;
+        const pts = [
+          `${-s},${-s}`,
+          `${s},${-s}`,
+          `${s},${s}`,
+          `${-s},${s}`,
+        ].join(" ");
+        return { type: "polygon", points: pts };
+      }
+    case "video":
+      // Octagon (like a play button / film reel)
+      {
+        const a = (2 * Math.PI) / 8;
+        const pts = Array.from({ length: 8 }, (_, i) => {
+          const angle = a * i - Math.PI / 8;
+          return `${r * Math.cos(angle)},${r * Math.sin(angle)}`;
+        }).join(" ");
+        return { type: "polygon", points: pts };
+      }
     default:
       // Circle for "text" and unknown
       return { type: "circle", r };

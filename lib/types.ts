@@ -15,10 +15,12 @@ export type ArchitectureType =
   | "encoder-decoder"
   | "mixture-of-experts"
   | "sparse-moe"
-  | "dense-transformer";
+  | "dense-transformer"
+  | "diffusion"
+  | "hybrid-mamba-transformer";
 
 /** Model modality */
-export type Modality = "text" | "multimodal" | "code" | "vision" | "audio";
+export type Modality = "text" | "multimodal" | "code" | "vision" | "audio" | "image" | "video";
 
 /** Innovation / technique tag */
 export type InnovationTag =
@@ -43,7 +45,12 @@ export type InnovationTag =
   | "scaling-laws"
   | "attention-mechanism"
   | "test-time-compute"
-  | "abliteration";
+  | "abliteration"
+  | "diffusion"
+  | "text-to-image"
+  | "text-to-audio"
+  | "text-to-video"
+  | "speech-recognition";
 
 /** Model family identifiers */
 export type ModelFamily =
@@ -62,8 +69,22 @@ export type ModelFamily =
   | "alibaba-qwen"
   | "tii-falcon"
   | "amazon-nova"
+  | "stability-ai"
+  | "midjourney"
+  | "image-gen"
   | "community"
-  | "foundational";
+  | "foundational"
+  | "nvidia-nemotron"
+  | "ibm"
+  | "coding-tool"
+  | "01ai-yi"
+  | "apple"
+  | "ai21-jamba"
+  | "allen-ai"
+  | "inflection"
+  | "search-tool"
+  | "music-gen"
+  | "speech-ai";
 
 /** Hardware manufacturer */
 export type HardwareManufacturer =
@@ -103,6 +124,8 @@ export interface ModelNode {
   status?: ModelStatus; // Lifecycle status (default: "active")
   discontinuedDate?: string; // When the model was deprecated/killed
   color?: string; // Brand color for visualization
+  significance?: string; // 1-2 sentence "Why this model matters" story
+  notableUses?: string[]; // Notable real-world applications or milestones
 }
 
 /** A foundational research paper */
@@ -115,10 +138,19 @@ export interface PaperNode {
   month?: number;
   institution: string;
   contribution: string;
+  significance?: string; // Educational summary of why this paper matters
   arxivUrl?: string;
   parentIds: string[]; // Papers this builds upon
+  relatedModelIds?: string[]; // Models this paper directly enabled or describes
   innovations: InnovationTag[];
-  era: "pre-transformer" | "transformer" | "scaling" | "alignment" | "reasoning";
+  era:
+    | "pre-transformer"
+    | "transformer"
+    | "scaling"
+    | "alignment"
+    | "reasoning"
+    | "architecture"
+    | "diffusion";
 }
 
 /** A hardware accelerator milestone */
@@ -185,8 +217,22 @@ export const FAMILY_COLORS: Record<ModelFamily, string> = {
   "alibaba-qwen": "#FF6A00", // Alibaba orange
   "tii-falcon": "#C4A35A", // Falcon gold
   "amazon-nova": "#FF9900", // AWS orange
+  "stability-ai": "#8B5CF6", // Stability purple
+  "midjourney": "#FFD700", // Midjourney gold
+  "image-gen": "#EC4899", // Pink for image gen
   "community": "#E040FB", // Purple-pink for community derivatives
   "foundational": "#8B5CF6", // Purple for papers
+  "nvidia-nemotron": "#76B900", // NVIDIA green
+  "ibm": "#1F70C1", // IBM blue
+  "coding-tool": "#06B6D4", // Teal for coding tools
+  "01ai-yi": "#6366F1", // Yi indigo
+  "apple": "#A2AAAD", // Apple silver
+  "ai21-jamba": "#00C2A8", // AI21 teal-green
+  "allen-ai": "#2563EB", // Allen AI blue
+  "inflection": "#F472B6", // Inflection pink
+  "search-tool": "#22D3EE", // Cyan for search products
+  "music-gen": "#F59E0B", // Warm amber for music
+  "speech-ai": "#A78BFA", // Soft purple for voice/speech
 };
 
 export const HARDWARE_COLORS: Record<HardwareManufacturer, string> = {
