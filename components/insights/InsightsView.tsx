@@ -425,6 +425,8 @@ export function InsightsView() {
       { paper: "MoE (Shazeer et al.)", paperYear: 2017, model: "Mixtral 8x7B", modelYear: 2023, gap: "6 years" },
       { paper: "LoRA", paperYear: 2021, model: "Widespread use", modelYear: 2023, gap: "2 years" },
       { paper: "Flash Attention", paperYear: 2022, model: "Default everywhere", modelYear: 2023, gap: "1 year" },
+      { paper: "RoPE", paperYear: 2021, model: "Default everywhere", modelYear: 2023, gap: "~2 years" },
+      { paper: "GQA", paperYear: 2023, model: "LLaMA 2", modelYear: 2023, gap: "<1 year" },
       { paper: "Mamba (SSM)", paperYear: 2023, model: "Jamba", modelYear: 2024, gap: "~4 months" },
     ];
 
@@ -461,6 +463,76 @@ export function InsightsView() {
       return { year: y, pct: Math.round((opennessByYear[y].open / total) * 100) };
     });
 
+    // --- China vs US model counts by year ---
+    const CHINESE_COMPANIES = new Set(["Zhipu AI", "Baidu", "Alibaba", "ByteDance", "Baichuan Inc", "Moonshot AI", "MiniMax", "DeepSeek", "01.AI"]);
+    const US_COMPANIES = new Set(["OpenAI", "Google", "Google DeepMind", "Meta", "Microsoft", "Anthropic", "xAI", "Amazon", "Apple", "NVIDIA", "Cohere", "Inflection AI"]);
+    const chinaByYear: Record<number, number> = {};
+    const usByYear: Record<number, number> = {};
+    YEARS.forEach((y) => { chinaByYear[y] = 0; usByYear[y] = 0; });
+    models.forEach((m) => {
+      const y = parseDate(m.releaseDate).getFullYear();
+      if (y >= 2018 && y <= 2026) {
+        if (CHINESE_COMPANIES.has(m.company)) chinaByYear[y]++;
+        if (US_COMPANIES.has(m.company)) usByYear[y]++;
+      }
+    });
+    const chinaCount = models.filter((m) => CHINESE_COMPANIES.has(m.company)).length;
+
+    // --- Efficiency trend (distillation + parameter-sharing + MoE/sparse-moe) ---
+    const EFFICIENCY_TAGS = new Set(["distillation", "parameter-sharing", "mixture-of-experts"]);
+    const efficiencyCum: { year: number; count: number }[] = [];
+    let cumEfficiency = 0;
+    YEARS.forEach((y) => {
+      const count = models.filter((m) => {
+        const my = parseDate(m.releaseDate).getFullYear();
+        return my === y && (m.innovations.some((inn) => EFFICIENCY_TAGS.has(inn)) || m.architecture === "mixture-of-experts" || m.architecture === "sparse-moe");
+      }).length;
+      cumEfficiency += count;
+      efficiencyCum.push({ year: y, count: cumEfficiency });
+    });
+    const totalEfficiency = efficiencyCum[efficiencyCum.length - 1]?.count ?? 0;
+
+    // --- Architecture evolution by year ---
+    const ARCH_TYPES = ["decoder-only", "encoder-only", "encoder-decoder", "mixture-of-experts", "sparse-moe", "diffusion"] as const;
+    const archByYear: Record<number, Record<string, number>> = {};
+    YEARS.forEach((y) => {
+      archByYear[y] = {};
+      ARCH_TYPES.forEach((a) => { archByYear[y][a] = 0; });
+    });
+    models.forEach((m) => {
+      const y = parseDate(m.releaseDate).getFullYear();
+      if (y >= 2018 && y <= 2026 && m.architecture) {
+        const arch = m.architecture as string;
+        archByYear[y][arch] = (archByYear[y][arch] || 0) + 1;
+      }
+    });
+
+    // --- Innovation density per year ---
+    const innovationDensity: { year: number; count: number }[] = [];
+    YEARS.forEach((y) => {
+      const uniqueInnovations = new Set<string>();
+      models.forEach((m) => {
+        const my = parseDate(m.releaseDate).getFullYear();
+        if (my === y) m.innovations.forEach((inn) => uniqueInnovations.add(inn));
+      });
+      innovationDensity.push({ year: y, count: uniqueInnovations.size });
+    });
+
+    // --- Safety & RLHF counts ---
+    const safetyFamilyCount = models.filter((m) => m.family === "safety").length;
+    const rlhfCount = models.filter((m) => m.innovations.includes("rlhf")).length;
+
+    // --- Specialization counts ---
+    const SPECIALIZED_FAMILIES = new Set(["embedding", "robotics", "speech-ai", "music-gen", "image-gen", "coding-tool", "safety", "search-tool"]);
+    const specializedCounts: Record<string, number> = {};
+    models.forEach((m) => {
+      if (SPECIALIZED_FAMILIES.has(m.family)) {
+        specializedCounts[m.family] = (specializedCounts[m.family] || 0) + 1;
+      }
+    });
+    const totalSpecialized = Object.values(specializedCounts).reduce((a, b) => a + b, 0);
+    const uniqueModalities = new Set(models.map((m) => m.modality).filter(Boolean));
+
     return {
       modelsByYear,
       opennessByYear,
@@ -474,6 +546,18 @@ export function InsightsView() {
       modalityByYear,
       reasoningCum,
       agenticCount,
+      chinaByYear,
+      usByYear,
+      chinaCount,
+      efficiencyCum,
+      totalEfficiency,
+      archByYear,
+      innovationDensity,
+      safetyFamilyCount,
+      rlhfCount,
+      specializedCounts,
+      totalSpecialized,
+      uniqueModalities,
       YEARS,
     };
   }, []);
@@ -493,6 +577,18 @@ export function InsightsView() {
     modalityByYear,
     reasoningCum,
     agenticCount,
+    chinaByYear,
+    usByYear,
+    chinaCount,
+    efficiencyCum,
+    totalEfficiency,
+    archByYear,
+    innovationDensity,
+    safetyFamilyCount,
+    rlhfCount,
+    specializedCounts,
+    totalSpecialized,
+    uniqueModalities,
     YEARS,
   } = computedData;
 
@@ -547,7 +643,7 @@ export function InsightsView() {
       statGradient: "linear-gradient(135deg, #8b5cf6, #6366f1, #4f46e5)",
       accentColor: "#8b5cf6",
       analysis:
-        "The AI landscape went from a handful of research projects to an industry producing nearly 70 new models per year. 2023 was the inflection point — the year ChatGPT's success triggered an industry-wide arms race. Every major tech company, from Apple to Amazon, scrambled to release their own models.",
+        `With ${models.length} models now tracked, the AI landscape went from a handful of research projects to an industry producing ${modelsByYear[2024]} new models per year. 2023 was the inflection point — the year ChatGPT's success triggered an industry-wide arms race. Every major tech company, from Apple to Amazon, scrambled to release their own models. ${totalCompanies} organizations across 10+ countries are now competing.`,
       chart: (
         <MiniChart>
           {(w, h) => {
@@ -843,7 +939,7 @@ export function InsightsView() {
       statGradient: "linear-gradient(135deg, #a78bfa, #8b5cf6)",
       accentColor: "#a78bfa",
       analysis:
-        "What started as a two-horse race between OpenAI and Google has become a global competition. Chinese companies (DeepSeek, Alibaba/Qwen, 01.AI) now produce models that match Western counterparts. Community contributors and startups (Nous Research, Eric Hartford) punch far above their weight through fine-tuning and abliteration techniques.",
+        `What started as a two-horse race between OpenAI and Google has become a global competition spanning ${totalCompanies} organizations. ${chinaCount} models come from Chinese labs — DeepSeek alone has ${specializedCounts["deepseek"] ?? 7} entries, while Alibaba's Qwen and Zhipu AI's GLM families are rapidly expanding. Community contributors and startups (Nous Research, Eric Hartford) punch far above their weight through fine-tuning and abliteration techniques.`,
       chart: (
         <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mt-4">
           {topCompanies.map(([company, count], i) => (
@@ -1035,6 +1131,250 @@ export function InsightsView() {
         </MiniChart>
       ),
     },
+
+    // 10. The China Factor
+    {
+      id: "china",
+      number: 10,
+      title: "The China Factor",
+      stat: `${chinaCount} Chinese models tracked, up from 0 in 2022`,
+      statGradient: "linear-gradient(135deg, #f43f5e, #e11d48, #be123c)",
+      accentColor: "#f43f5e",
+      analysis:
+        "China has emerged as the world's second AI superpower. Companies like DeepSeek proved that innovative architecture (MLA, multi-head latent attention) can compete with brute-force scaling. Moonshot AI's Kimi K2 (1 trillion parameters, open-weight) and MiniMax-01 (4 million token context) show that Chinese labs are no longer following — they're leading on specific frontiers. The US-China AI race is now the defining dynamic of the industry, with implications for regulation, export controls, and the future of open research.",
+      chart: (
+        <MiniChart height={220}>
+          {(w, h) => {
+            const M = { top: 16, right: 16, bottom: 28, left: 32 };
+            const iW = w - M.left - M.right;
+            const iH = h - M.top - M.bottom;
+            const filteredYears = YEARS.filter((y) => usByYear[y] > 0 || chinaByYear[y] > 0);
+            const maxVal = Math.max(...filteredYears.map((y) => usByYear[y] + chinaByYear[y]));
+            const x = d3.scaleBand<number>().domain(filteredYears).range([0, iW]).padding(0.2);
+            const y = d3.scaleLinear().domain([0, maxVal + 3]).range([iH, 0]);
+            return (
+              <svg width={w} height={h}>
+                <defs>
+                  <linearGradient id="g-china" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#f43f5e" />
+                    <stop offset="100%" stopColor="#be123c" />
+                  </linearGradient>
+                  <linearGradient id="g-us" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#3b82f6" />
+                    <stop offset="100%" stopColor="#1d4ed8" />
+                  </linearGradient>
+                </defs>
+                <g transform={`translate(${M.left},${M.top})`}>
+                  {y.ticks(4).map((t) => (
+                    <line key={t} x1={0} x2={iW} y1={y(t)} y2={y(t)} stroke="rgba(255,255,255,0.06)" strokeDasharray="4 4" />
+                  ))}
+                  {filteredYears.map((yr) => {
+                    const bx = x(yr)!;
+                    const bw = x.bandwidth() / 2 - 1;
+                    const usVal = usByYear[yr];
+                    const cnVal = chinaByYear[yr];
+                    return (
+                      <g key={yr}>
+                        <rect x={bx} y={y(usVal)} width={bw} height={iH - y(usVal)} rx={3} fill="url(#g-us)" opacity={0.8} />
+                        <rect x={bx + bw + 2} y={y(cnVal)} width={bw} height={iH - y(cnVal)} rx={3} fill="url(#g-china)" opacity={0.8} />
+                        {usVal > 0 && <text x={bx + bw / 2} y={y(usVal) - 4} textAnchor="middle" className="fill-text-secondary text-[8px] font-medium">{usVal}</text>}
+                        {cnVal > 0 && <text x={bx + bw + 2 + bw / 2} y={y(cnVal) - 4} textAnchor="middle" className="fill-text-secondary text-[8px] font-medium">{cnVal}</text>}
+                      </g>
+                    );
+                  })}
+                  <g transform={`translate(0,${iH})`}>
+                    {filteredYears.map((yr) => (
+                      <text key={yr} x={x(yr)! + x.bandwidth() / 2} y={16} textAnchor="middle" className="fill-text-muted text-[9px]">
+                        {String(yr).slice(2)}
+                      </text>
+                    ))}
+                  </g>
+                  {y.ticks(4).map((t) => (
+                    <text key={t} x={-6} y={y(t)} textAnchor="end" dominantBaseline="middle" className="fill-text-muted text-[9px]">
+                      {t}
+                    </text>
+                  ))}
+                </g>
+                {/* Legend */}
+                <g transform={`translate(${M.left + 4}, ${h - 4})`}>
+                  <rect width={8} height={8} rx={2} fill="#3b82f6" opacity={0.8} y={-8} />
+                  <text x={12} className="fill-text-muted text-[8px]" dominantBaseline="middle">US</text>
+                  <g transform="translate(40, 0)">
+                    <rect width={8} height={8} rx={2} fill="#f43f5e" opacity={0.8} y={-8} />
+                    <text x={12} className="fill-text-muted text-[8px]" dominantBaseline="middle">China</text>
+                  </g>
+                </g>
+              </svg>
+            );
+          }}
+        </MiniChart>
+      ),
+    },
+
+    // 11. The Efficiency Revolution
+    {
+      id: "efficiency",
+      number: 11,
+      title: "The Efficiency Revolution",
+      stat: `${totalEfficiency} models use efficiency innovations (distillation, MoE, parameter sharing)`,
+      statGradient: "linear-gradient(135deg, #10b981, #059669, #047857)",
+      accentColor: "#10b981",
+      analysis:
+        "The AI industry hit a wall: training ever-larger models became prohibitively expensive. The response was an efficiency revolution. DistilBERT showed you could compress BERT to 60% of its size while keeping 97% of its capability. ALBERT proved parameter sharing could slash model size 18×. Mixture-of-Experts architectures (Mixtral, DeepSeek-V2) activate only a fraction of parameters per query. LoRA made fine-tuning accessible on consumer GPUs. The Chinchilla paper proved most models were undertrained relative to their size. The new mantra: smaller, smarter, cheaper.",
+      chart: (
+        <MiniChart>
+          {(w, h) => {
+            const M = { top: 16, right: 16, bottom: 28, left: 32 };
+            const iW = w - M.left - M.right;
+            const iH = h - M.top - M.bottom;
+            const maxVal = efficiencyCum[efficiencyCum.length - 1]?.count ?? 1;
+            const x = d3.scaleLinear().domain([2018, 2026]).range([0, iW]);
+            const y = d3.scaleLinear().domain([0, maxVal + 3]).range([iH, 0]);
+            const lineGen = d3.line<{ year: number; count: number }>().x((d) => x(d.year)).y((d) => y(d.count)).curve(d3.curveMonotoneX);
+            const areaGen = d3.area<{ year: number; count: number }>().x((d) => x(d.year)).y0(iH).y1((d) => y(d.count)).curve(d3.curveMonotoneX);
+            return (
+              <svg width={w} height={h}>
+                <defs>
+                  <linearGradient id="g-eff-area" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#10b981" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="#10b981" stopOpacity={0.02} />
+                  </linearGradient>
+                </defs>
+                <g transform={`translate(${M.left},${M.top})`}>
+                  {y.ticks(4).map((t) => (
+                    <line key={t} x1={0} x2={iW} y1={y(t)} y2={y(t)} stroke="rgba(255,255,255,0.06)" strokeDasharray="4 4" />
+                  ))}
+                  <path d={areaGen(efficiencyCum) ?? ""} fill="url(#g-eff-area)" />
+                  <path d={lineGen(efficiencyCum) ?? ""} fill="none" stroke="#10b981" strokeWidth={2.5} />
+                  {efficiencyCum.filter((d) => d.count > 0).map((d) => (
+                    <circle key={d.year} cx={x(d.year)} cy={y(d.count)} r={4} fill="#10b981" stroke="#0a0a0f" strokeWidth={2} />
+                  ))}
+                  <g transform={`translate(0,${iH})`}>
+                    {YEARS.map((yr) => (
+                      <text key={yr} x={x(yr)} y={16} textAnchor="middle" className="fill-text-muted text-[9px]">
+                        {String(yr).slice(2)}
+                      </text>
+                    ))}
+                  </g>
+                  {y.ticks(4).map((t) => (
+                    <text key={t} x={-6} y={y(t)} textAnchor="end" dominantBaseline="middle" className="fill-text-muted text-[9px]">
+                      {t}
+                    </text>
+                  ))}
+                </g>
+              </svg>
+            );
+          }}
+        </MiniChart>
+      ),
+    },
+
+    // 12. The Safety Imperative
+    {
+      id: "safety-alignment",
+      number: 12,
+      title: "The Safety Imperative",
+      stat: `${safetyFamilyCount} dedicated safety models + ${rlhfCount} RLHF-aligned models`,
+      statGradient: "linear-gradient(135deg, #ef4444, #f97316, #f59e0b)",
+      accentColor: "#ef4444",
+      analysis:
+        "Safety went from an academic afterthought to an industry imperative. The RLHF paper (2017) took 5 years to become standard practice. Constitutional AI gave Anthropic a principled framework for self-improvement. But the real shift came when Meta released Llama Guard — a dedicated safety classifier that any developer could use. Google followed with ShieldGemma. Meanwhile, the open-source community pushed back with 'abliteration' techniques, raising fundamental questions: who decides what's safe, and should guardrails be removable?",
+      chart: (
+        <MiniChart height={180}>
+          {(w, h) => {
+            const M = { top: 12, right: 16, bottom: 8, left: 8 };
+            const iW = w - M.left - M.right;
+            const iH = h - M.top - M.bottom;
+            const milestones = [
+              { year: 2017, label: "RLHF Paper", color: "#f97316" },
+              { year: 2022, label: "Constitutional AI", color: "#ef4444" },
+              { year: 2022, label: "InstructGPT", color: "#f59e0b" },
+              { year: 2024, label: "Llama Guard", color: "#10b981" },
+              { year: 2024, label: "ShieldGemma", color: "#3b82f6" },
+            ];
+            const x = d3.scaleLinear().domain([2016, 2025]).range([0, iW]);
+            const rowH = iH / milestones.length;
+            return (
+              <svg width={w} height={h}>
+                <g transform={`translate(${M.left},${M.top})`}>
+                  {/* Timeline line */}
+                  <line x1={0} x2={iW} y1={iH / 2} y2={iH / 2} stroke="rgba(255,255,255,0.08)" strokeWidth={2} />
+                  {milestones.map((m, i) => {
+                    const cx = x(m.year);
+                    const cy = (i % 2 === 0) ? iH / 2 - 20 - (i * 4) : iH / 2 + 20 + ((i - 1) * 4);
+                    return (
+                      <g key={m.label}>
+                        <line x1={cx} x2={cx} y1={iH / 2} y2={cy} stroke={m.color} strokeWidth={1.5} strokeDasharray="3 3" />
+                        <circle cx={cx} cy={iH / 2} r={5} fill={m.color} stroke="#0a0a0f" strokeWidth={2} />
+                        <text x={cx} y={cy + (i % 2 === 0 ? -6 : 12)} textAnchor="middle" className="fill-text-secondary text-[9px] font-medium">
+                          {m.label}
+                        </text>
+                        <text x={cx} y={cy + (i % 2 === 0 ? -18 : 24)} textAnchor="middle" className="fill-text-muted text-[8px]">
+                          {m.year}
+                        </text>
+                      </g>
+                    );
+                  })}
+                </g>
+              </svg>
+            );
+          }}
+        </MiniChart>
+      ),
+    },
+
+    // 13. From Text to Everything
+    {
+      id: "specialization",
+      number: 13,
+      title: "From Text to Everything",
+      stat: `${uniqueModalities.size} modalities × ${Object.keys(specializedCounts).length} specialized verticals = ${totalSpecialized} specialist models`,
+      statGradient: "linear-gradient(135deg, #8b5cf6, #06b6d4, #10b981, #f59e0b, #ec4899)",
+      accentColor: "#8b5cf6",
+      analysis:
+        "AI has fragmented from one thing (text prediction) into a dozen specialized disciplines. Embedding models (text-embedding-3, BGE) power every search engine and RAG pipeline. Safety models (Llama Guard, ShieldGemma) act as AI immune systems. Robotics models (RT-2, PaLM-E) bridge language and physical action. Music generators (Suno, Udio), speech synthesizers (VALL-E, ElevenLabs), and coding agents (Devin, Cursor, SWE-Agent) each represent billion-dollar verticals. The 'foundation model' era is giving way to an era of specialized, deeply integrated AI products.",
+      chart: (
+        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mt-4">
+          {Object.entries(specializedCounts)
+            .sort(([, a], [, b]) => b - a)
+            .map(([family, count]) => {
+              const colors: Record<string, string> = {
+                "image-gen": "#ec4899",
+                "coding-tool": "#10b981",
+                "search-tool": "#3b82f6",
+                embedding: "#06b6d4",
+                safety: "#ef4444",
+                "speech-ai": "#f59e0b",
+                "music-gen": "#a78bfa",
+                robotics: "#f97316",
+              };
+              const labels: Record<string, string> = {
+                "image-gen": "Image Gen",
+                "coding-tool": "Coding",
+                "search-tool": "Search",
+                embedding: "Embedding",
+                safety: "Safety",
+                "speech-ai": "Speech",
+                "music-gen": "Music",
+                robotics: "Robotics",
+              };
+              return (
+                <div
+                  key={family}
+                  className="glass rounded-lg px-3 py-3 text-center transition-all hover:bg-surface-elevated"
+                >
+                  <div className="text-xl sm:text-2xl font-bold" style={{ color: colors[family] ?? "#8b5cf6" }}>
+                    {count}
+                  </div>
+                  <div className="text-[10px] text-text-muted leading-tight">
+                    {labels[family] ?? family}
+                  </div>
+                </div>
+              );
+            })}
+        </div>
+      ),
+    },
   ];
 
   // ── Table of Contents ───────────────────────────────────────────────────
@@ -1059,7 +1399,7 @@ export function InsightsView() {
         <h3 className="text-sm font-semibold text-text-muted uppercase tracking-widest mb-4">
           Table of Contents
         </h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2">
           {tocItems.map((item, i) => (
             <a
               key={item.id}
@@ -1097,7 +1437,7 @@ export function InsightsView() {
 }
 
 // ============================================================================
-// "What's Next" — Special glass card (Insight #10)
+// "What's Next" — Special glass card (Insight #14)
 // ============================================================================
 
 function WhatNextCard({
@@ -1135,7 +1475,17 @@ function WhatNextCard({
     {
       label: "Specialization",
       icon: "🎯",
-      text: "Coding tools, search engines, music generators — AI is fragmenting into specialized, deeply integrated products.",
+      text: "Coding tools, search engines, music generators — AI is fragmenting into specialized, deeply integrated products that do one thing exceptionally well.",
+    },
+    {
+      label: "The US-China race",
+      icon: "🌏",
+      text: "The US-China AI race will intensify — Chinese open-weight models (DeepSeek, Kimi K2) are already matching Western closed models on key benchmarks.",
+    },
+    {
+      label: "Vertical foundation models",
+      icon: "🏥",
+      text: "Every industry vertical will have its own foundation model — legal AI, medical AI, financial AI — each trained on domain-specific data at scale.",
     },
   ];
 
@@ -1155,7 +1505,7 @@ function WhatNextCard({
 
       <div className="relative z-10 p-6 sm:p-8">
         <div className="text-[10px] uppercase tracking-widest text-text-muted font-medium mb-3">
-          Insight #10
+          Insight #14
         </div>
 
         <h2 className="text-xl sm:text-2xl font-bold text-text-primary mb-2">
