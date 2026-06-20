@@ -244,6 +244,19 @@ export const GLOSSARY: Record<string, string> = {
     "An attention mechanism relating different positions of a single sequence to compute a representation of the sequence.",
   Transformer:
     "Neural network architecture using self-attention to process entire sequences in parallel. Replaced RNNs and enabled massive scaling.",
+  // ── Math Variables ────────────────────────────────────────────────────────
+  "Q":
+    "Query Matrix — contains vectors representing the tokens searching for context in the sequence.",
+  "K":
+    "Key Matrix — contains vectors representing the keys that match against queries to compute attention weights.",
+  "V":
+    "Value Matrix — contains vectors representing the actual semantic content to be retrieved for each token.",
+  "d_k":
+    "Key Dimension — the size/length of each key/query vector. Used as a scaling factor to keep dot-products stable.",
+  "T":
+    "Temperature — a hyperparameter dividing the logits to scale next-token selection randomness.",
+  "z_i":
+    "Logit — the raw, unnormalized prediction score output by the model for a specific token.",
 };
 
 // ============================================================================

@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { TechTerm, AutoGlossary } from "@/components/ui/TechTerm";
+import { AttentionFormula, SoftmaxFormula, MathVar } from "@/components/ui/InteractiveFormula";
 
 // ============================================================================
 // Types & Data Structures
@@ -115,6 +116,10 @@ const ATTENTION_HEADS = [
 // ============================================================================
 
 export default function LearnPage() {
+  // ── Audience Level State ──────────────────────────────────────────────────
+  const [activeLevel, setActiveLevel] = useState<"casual" | "developer" | "researcher">("developer");
+  const [expandedCard, setExpandedCard] = useState<number | null>(null);
+
   // ── Tokens Sandbox State ──────────────────────────────────────────────────
   const [inputText, setInputText] = useState(
     "Attention is all you need for learning artificial intelligence."
@@ -390,7 +395,194 @@ export default function LearnPage() {
           </p>
         </section>
 
+        {/* ── Audience Level Selector ─────────────────────────────────────── */}
+        <div className="flex justify-center mb-12 relative z-20">
+          <div className="inline-flex p-1.5 rounded-2xl glass border border-border-default/60 shadow-lg">
+            {(["casual", "developer", "researcher"] as const).map((level) => {
+              const label =
+                level === "casual"
+                  ? "🐣 Casual (ELI5)"
+                  : level === "developer"
+                  ? "💻 Developer"
+                  : "🔬 Researcher (Math)";
+              const isActive = activeLevel === level;
+              return (
+                <button
+                  key={level}
+                  onClick={() => setActiveLevel(level)}
+                  className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 ${
+                    isActive
+                      ? "bg-gradient-to-r from-accent-cyan/15 to-accent-violet/15 text-text-primary border border-accent-cyan/35 shadow-inner"
+                      : "text-text-muted hover:text-text-primary border border-transparent"
+                  }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         <div className="glow-line mb-16" />
+
+        {/* ── SECTION 0: The Roots (Classical & Biological AI) ──────────────── */}
+        <section className="glass rounded-2xl p-6 sm:p-8 mb-12">
+          <div className="flex items-center gap-3 mb-6">
+            <span className="w-8 h-8 rounded-lg bg-accent-cyan/10 text-accent-cyan flex items-center justify-center font-bold text-sm">
+              S0
+            </span>
+            <h2 className="text-2xl font-bold text-text-primary">The Roots: How We Got Here</h2>
+          </div>
+          
+          <p className="text-text-secondary text-sm sm:text-base leading-relaxed mb-6">
+            {activeLevel === "casual" && (
+              "Before we dive into modern large language models, it helps to understand where AI came from. Modern AI is built on ideas from human biology, rules of logic, and older sequential reading networks. Click any card below to explore."
+            )}
+            {activeLevel === "developer" && (
+              "Modern Transformer architectures didn't emerge in a vacuum. They are the evolutionary culmination of biological brain modeling, classical symbolic logic, and sequential neural architectures. Click a card to explore their core mechanics and bottlenecks."
+            )}
+            {activeLevel === "researcher" && (
+              "Prior to the transduction bottleneck resolution by self-attention, sequence modeling relied on recurrent hidden-state mappings and symbolic logical induction. Click a card to examine the mathematical foundations and limitations of these pre-Transformer paradigms."
+            )}
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Card 1: Biological Neural Networks */}
+            <div 
+              onClick={() => setExpandedCard(expandedCard === 0 ? null : 0)}
+              className={`p-5 rounded-xl border transition-all duration-300 cursor-pointer ${
+                expandedCard === 0 
+                  ? "bg-white/[0.02] border-accent-cyan shadow-lg md:col-span-3" 
+                  : "bg-surface-secondary/40 border-border-default/60 hover:bg-surface-tertiary/40"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">🧠</span>
+                  <div>
+                    <h3 className="font-bold text-text-primary text-sm sm:text-base">Biological Neural Networks</h3>
+                    <span className="text-[10px] uppercase font-semibold tracking-wide text-text-muted">Brain-inspired computes</span>
+                  </div>
+                </div>
+                <span className="text-xs text-accent-cyan font-semibold">
+                  {expandedCard === 0 ? "Collapse ▲" : "Expand ▼"}
+                </span>
+              </div>
+              
+              {expandedCard === 0 && (
+                <div className="mt-4 pt-4 border-t border-border-default/40 text-xs sm:text-sm text-text-secondary leading-relaxed space-y-3 animate-fade-in">
+                  <p>
+                    {activeLevel === "casual" && (
+                      "Think of your brain like billions of friendly people (neurons) standing in a huge crowd. When someone taps you on the shoulder with a note, you read it, think about it, and if it's exciting enough, you tap the next person. In AI, weights act like how hard someone taps you, and activation functions decide if you'll pass the message along!"
+                    )}
+                    {activeLevel === "developer" && (
+                      "Artificial Neural Networks are modeled after the biological brain. Dendrites receive input signals, the cell body sums them, and the axon fires a spike if the threshold is met. In code, we represent this as inputs multiplied by weights, summed with a bias, and passed through an activation function like ReLU to introduce non-linearity."
+                    )}
+                    {activeLevel === "researcher" && (
+                      <span>
+                        Biological neural transmission is modeled via the artificial neuron:{" "}
+                        <code className="text-accent-cyan-light font-mono px-1 py-0.5 bg-surface-secondary rounded">
+                          a_j = σ(∑ w_jk a_k + b_j)
+                        </code>
+                        , where w represents synaptic weights, b represents activation thresholds (bias), and σ represents a non-linear activation function (such as ReLU or Sigmoid). Weights are optimized iteratively using backpropagation to minimize a defined cost function.
+                      </span>
+                    )}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Card 2: Symbolic & Rule-Based AI */}
+            <div 
+              onClick={() => setExpandedCard(expandedCard === 1 ? null : 1)}
+              className={`p-5 rounded-xl border transition-all duration-300 cursor-pointer ${
+                expandedCard === 1 
+                  ? "bg-white/[0.02] border-accent-cyan shadow-lg md:col-span-3" 
+                  : "bg-surface-secondary/40 border-border-default/60 hover:bg-surface-tertiary/40"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">💾</span>
+                  <div>
+                    <h3 className="font-bold text-text-primary text-sm sm:text-base">Symbolic &amp; Rule-Based AI</h3>
+                    <span className="text-[10px] uppercase font-semibold tracking-wide text-text-muted">Logical &quot;If-Else&quot; Engines</span>
+                  </div>
+                </div>
+                <span className="text-xs text-accent-cyan font-semibold">
+                  {expandedCard === 1 ? "Collapse ▲" : "Expand ▼"}
+                </span>
+              </div>
+              
+              {expandedCard === 1 && (
+                <div className="mt-4 pt-4 border-t border-border-default/40 text-xs sm:text-sm text-text-secondary leading-relaxed space-y-3 animate-fade-in">
+                  <p>
+                    {activeLevel === "casual" && (
+                      "Imagine a giant instruction book filled with 'If-Else' rules. 'If it is raining, take an umbrella.' This is symbolic AI. It works perfectly for simple directions, but if you ask it a question not in the book (like translating a poem), it gets stuck because it can't learn or adapt on its own."
+                    )}
+                    {activeLevel === "developer" && (
+                      "Before deep learning, AI was dominated by Symbolic AI (Expert Systems). Developers manually programmed massive decision trees and knowledge representations. While excellent for deterministic, rule-bound tasks (like tax software), it failed at fuzzy pattern recognition (like speech or vision) due to the combinatorial explosion of rules."
+                    )}
+                    {activeLevel === "researcher" && (
+                      <span>
+                        Symbolic AI leverages formal logic, ontologies, and heuristic search space traversal. It operates on discrete symbols rather than continuous vector spaces. The computational complexity typically scales factorially{" "}
+                        <code className="text-accent-cyan-light font-mono px-1 py-0.5 bg-surface-secondary rounded">
+                          O(n!)
+                        </code>{" "}
+                        with problem depth, leading to search-space bottlenecks that require neural approximations to resolve.
+                      </span>
+                    )}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Card 3: Recurrent & Sequential AI */}
+            <div 
+              onClick={() => setExpandedCard(expandedCard === 2 ? null : 2)}
+              className={`p-5 rounded-xl border transition-all duration-300 cursor-pointer ${
+                expandedCard === 2 
+                  ? "bg-white/[0.02] border-accent-cyan shadow-lg md:col-span-3" 
+                  : "bg-surface-secondary/40 border-border-default/60 hover:bg-surface-tertiary/40"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">🔄</span>
+                  <div>
+                    <h3 className="font-bold text-text-primary text-sm sm:text-base">Recurrent &amp; Sequential AI</h3>
+                    <span className="text-[10px] uppercase font-semibold tracking-wide text-text-muted">Early NLP (RNNs &amp; LSTMs)</span>
+                  </div>
+                </div>
+                <span className="text-xs text-accent-cyan font-semibold">
+                  {expandedCard === 2 ? "Collapse ▲" : "Expand ▼"}
+                </span>
+              </div>
+              
+              {expandedCard === 2 && (
+                <div className="mt-4 pt-4 border-t border-border-default/40 text-xs sm:text-sm text-text-secondary leading-relaxed space-y-3 animate-fade-in">
+                  <p>
+                    {activeLevel === "casual" && (
+                      "Imagine reading a long book, but you can only see one word at a time, and you have to forget the beginning of the sentence by the time you reach the end. This is how early language models worked. They read text step-by-step and frequently forgot context if the sentence was too long!"
+                    )}
+                    {activeLevel === "developer" && (
+                      "Recurrent Neural Networks (RNNs) and LSTMs process sequences sequentially, maintaining a hidden state vector that updates at each step. Because they process tokens one-by-one, they cannot parallelize training easily, and they suffer from vanishing gradients, limiting their effective context memory."
+                    )}
+                    {activeLevel === "researcher" && (
+                      <span>
+                        For a sequence, a recurrent network computes hidden states{" "}
+                        <code className="text-accent-cyan-light font-mono px-1 py-0.5 bg-surface-secondary rounded">
+                          h_t = tanh(W_hh h_t-1 + W_xh x_t)
+                        </code>
+                        . Backpropagating gradients through time (BPTT) requires multiplying weight matrices repeatedly, which leads to exponential decay (vanishing gradient) or explosion, mathematically limiting long-range dependency modeling.
+                      </span>
+                    )}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
 
         {/* ── SECTION 1: Tokens & Embeddings ──────────────────────────────── */}
         <section className="glass rounded-2xl p-6 sm:p-8 mb-12">
@@ -403,18 +595,42 @@ export default function LearnPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start mb-6">
             <div className="text-text-secondary text-sm sm:text-base leading-relaxed space-y-4">
-              <p>
-                Models cannot read text directly. First, a <TechTerm term="Tokenizer"><strong>tokenizer</strong></TechTerm> splits text into
-                subword fragments called <TechTerm term="Token"><strong>tokens</strong></TechTerm>. Common prefixes or suffixes
-                (like <code>##ing</code> or BPE space markers <code>Ġ</code>) are isolated
-                to allow the model to recognize grammatical roots <span className="text-text-muted">[Radford et al. 2018]</span>.
-              </p>
-              <p>
-                Each <TechTerm term="Token">token</TechTerm> is mapped to a unique <TechTerm term="Integer">integer</TechTerm> ID. Then, a lookup table translates
-                these IDs into <TechTerm term="Embedding"><strong>embeddings</strong></TechTerm>: dense <TechTerm term="Vector">vectors</TechTerm> (often 4096+ dimensions) that position
-                words in a semantic space. In this space, words with similar meanings (like &quot;king&quot;
-                and &quot;queen&quot;) are grouped close together.
-              </p>
+              {activeLevel === "casual" && (
+                <>
+                  <p>
+                    AI models don&apos;t read words like humans do. First, a <TechTerm term="Tokenizer"><strong>tokenizer</strong></TechTerm> cuts words into smaller, byte-sized puzzle pieces called <TechTerm term="Token"><strong>tokens</strong></TechTerm> (similar to slicing a long word like &quot;running&quot; into &quot;run&quot; and &quot;##ning&quot;). This helps the model recognize grammatical roots easily.
+                  </p>
+                  <p>
+                    Each token is turned into a unique <TechTerm term="Integer">integer</TechTerm> ID. Then, the AI uses a lookup table to translate these IDs into <TechTerm term="Embedding"><strong>embeddings</strong></TechTerm>. Think of embeddings as coordinates on a giant &quot;meaning map&quot; (<TechTerm term="Vector">vectors</TechTerm>). In this map, words with similar meanings (like &quot;apple&quot; and &quot;banana&quot;) are positioned right next to each other, while &quot;car&quot; is far away.
+                  </p>
+                </>
+              )}
+              {activeLevel === "developer" && (
+                <>
+                  <p>
+                    Models cannot read text directly. First, a <TechTerm term="Tokenizer"><strong>tokenizer</strong></TechTerm> splits text into
+                    subword fragments called <TechTerm term="Token"><strong>tokens</strong></TechTerm>. Common prefixes or suffixes
+                    (like <code>##ing</code> or BPE space markers <code>Ġ</code>) are isolated
+                    to allow the model to recognize grammatical roots <span className="text-text-muted">[Radford et al. 2018]</span>.
+                  </p>
+                  <p>
+                    Each <TechTerm term="Token">token</TechTerm> is mapped to a unique <TechTerm term="Integer">integer</TechTerm> ID. Then, a lookup table translates
+                    these IDs into <TechTerm term="Embedding"><strong>embeddings</strong></TechTerm>: dense <TechTerm term="Vector">vectors</TechTerm> (often 4096+ dimensions) that position
+                    words in a semantic space. In this space, words with similar meanings (like &quot;king&quot;
+                    and &quot;queen&quot;) are grouped close together.
+                  </p>
+                </>
+              )}
+              {activeLevel === "researcher" && (
+                <>
+                  <p>
+                    Text sequences are ingested by first parsing them via a subword <TechTerm term="Tokenizer"><strong>tokenizer</strong></TechTerm> (e.g. Byte-Pair Encoding or WordPiece) into discrete <TechTerm term="Token"><strong>tokens</strong></TechTerm>. This maps raw strings to a vocabulary set $V$ while retaining morphological and semantic subword cues.
+                  </p>
+                  <p>
+                    Each token index $t \in V$ is represented as a one-hot vector and projected into a continuous space using a learnable embedding weight matrix <code className="text-accent-cyan-light font-mono px-1 py-0.5 bg-surface-secondary/50 rounded">{"W_e ∈ ℝ^(d × |V|)"}</code>, yielding dense <TechTerm term="Embedding"><strong>embeddings</strong></TechTerm> (high-dimensional <TechTerm term="Vector">vectors</TechTerm> of dimension $d$). These project tokens into a latent space where semantic proximity is optimized via cosine similarity.
+                  </p>
+                </>
+              )}
             </div>
 
             {/* Sandbox Container */}
@@ -464,16 +680,47 @@ export default function LearnPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start mb-6">
             <div className="text-text-secondary text-sm sm:text-base leading-relaxed space-y-4">
-              <p>
-                The core engine of the <TechTerm term="Transformer">Transformer</TechTerm> is <TechTerm term="Self-Attention"><strong>Self-Attention</strong></TechTerm> <span className="text-text-muted">[Vaswani et al. 2017]</span>.
-                In a sentence, words depend on <TechTerm term="Context">context</TechTerm>. For example, in &quot;The <TechTerm term="LLM">llm</TechTerm> read the <TechTerm term="Prompt">prompt</TechTerm> because &quot;<strong>it</strong>&quot; was relevant&quot;, what does &quot;it&quot; refer to?
-              </p>
-              <p>
-                Self-Attention calculates a set of <TechTerm term="Query">query</TechTerm>, <TechTerm term="Key">key</TechTerm>, and value <TechTerm term="Vector">vectors</TechTerm>. The query for &quot;it&quot; is compared with <TechTerm term="Key">keys</TechTerm> for all other words. The model computes weights representing how much &quot;<TechTerm term="Attention">attention</TechTerm>&quot; to pay to each word.
-              </p>
-              <p>
-                <TechTerm term="Transformer">Transformers</TechTerm> run multiple <TechTerm term="Heads"><strong>Attention Heads</strong></TechTerm> in parallel. This allows the model to capture different relations simultaneously (e.g. tracking pronouns in one head, verbs in another).
-              </p>
+              {activeLevel === "casual" && (
+                <>
+                  <p>
+                    The core magic of the <TechTerm term="Transformer">Transformer</TechTerm> is called <TechTerm term="Self-Attention"><strong>Self-Attention</strong></TechTerm>. In a sentence, words depend on their surrounding <TechTerm term="Context">context</TechTerm>. For example, in &quot;The <TechTerm term="LLM">llm</TechTerm> read the <TechTerm term="Prompt">prompt</TechTerm> because it was relevant,&quot; we know &quot;it&quot; refers to the prompt. Self-Attention is how the model figures this out!
+                  </p>
+                  <p>
+                    It does this by making words &quot;talk&quot; to each other. Every word sends a <TechTerm term="Query">query</TechTerm> (&quot;What am I looking for?&quot;), matches it against others&apos; <TechTerm term="Key">keys</TechTerm> (&quot;What information do I have?&quot;), and retrieves a weighted average of <TechTerm term="Vector">vectors</TechTerm>. This calculates how much &quot;<TechTerm term="Attention">attention</TechTerm>&quot; words should pay to one another.
+                  </p>
+                  <p>
+                    By running multiple <TechTerm term="Heads"><strong>Attention Heads</strong></TechTerm> in parallel, the model behaves like a group of readers reading the same page, each focusing on different clues (like matching pronouns in one head, tracking verbs in another).
+                  </p>
+                </>
+              )}
+              {activeLevel === "developer" && (
+                <>
+                  <p>
+                    The core engine of the <TechTerm term="Transformer">Transformer</TechTerm> is <TechTerm term="Self-Attention"><strong>Self-Attention</strong></TechTerm> <span className="text-text-muted">[Vaswani et al. 2017]</span>.
+                    In a sentence, words depend on <TechTerm term="Context">context</TechTerm>. For example, in &quot;The <TechTerm term="LLM">llm</TechTerm> read the <TechTerm term="Prompt">prompt</TechTerm> because &quot;<strong>it</strong>&quot; was relevant&quot;, what does &quot;it&quot; refer to?
+                  </p>
+                  <p>
+                    Self-Attention calculates a set of <TechTerm term="Query">query</TechTerm>, <TechTerm term="Key">key</TechTerm>, and value <TechTerm term="Vector">vectors</TechTerm>. The query for &quot;it&quot; is compared with <TechTerm term="Key">keys</TechTerm> for all other words. The model computes weights representing how much &quot;<TechTerm term="Attention">attention</TechTerm>&quot; to pay to each word.
+                  </p>
+                  <p>
+                    <TechTerm term="Transformer">Transformers</TechTerm> run multiple <TechTerm term="Heads"><strong>Attention Heads</strong></TechTerm> in parallel. This allows the model to capture different relations simultaneously (e.g. tracking pronouns in one head, verbs in another).
+                  </p>
+                </>
+              )}
+              {activeLevel === "researcher" && (
+                <>
+                  <p>
+                    The primary mechanism of transduction in the <TechTerm term="Transformer">Transformer</TechTerm> is <TechTerm term="Self-Attention"><strong>Self-Attention</strong></TechTerm>. For input representations, the model projects states into query, key, and value matrices to capture directional dependencies across the sequence <TechTerm term="Context">context</TechTerm>.
+                  </p>
+                  <p>
+                    Given an input sequence representation $X$, we compute projections $Q = X W_Q$, $K = X W_K$, and $V = X W_V$. Dot-product similarity scores are computed between queries and keys, normalized using softmax to prevent gradient vanishing, and used to weight the value vectors.
+                  </p>
+                  <p>
+                    Multi-Head Attention divides this operation across independent <TechTerm term="Heads"><strong>Attention Heads</strong></TechTerm>, projecting $Q, K, V$ into $h$ subspaces. This allows the network to jointly attend to information from different representation subspaces at different positions.
+                  </p>
+                  <AttentionFormula />
+                </>
+              )}
             </div>
 
             {/* Visual Attention Map */}
@@ -609,9 +856,15 @@ export default function LearnPage() {
 
           <div className="text-text-secondary text-sm sm:text-base leading-relaxed space-y-4 mb-8">
             <p>
-              <TechTerm term="Frontier">Frontier</TechTerm> models go through three major training phases to become reliable
-              and safe assistants <span className="text-text-muted">[Ouyang et al. 2022]</span>.
-              Click through the phases below to see how datasets and model behaviors change.
+              {activeLevel === "casual" && (
+                "To turn a raw AI model into a friendly, helpful chatbot assistant, it must go through three major learning phases. Click through the phases below to see how AI goes from a raw autocomplete engine to a safe, aligned assistant."
+              )}
+              {activeLevel === "developer" && (
+                <><TechTerm term="Frontier">Frontier</TechTerm> models go through three major training phases to become reliable and safe assistants <span className="text-text-muted">[Ouyang et al. 2022]</span>. Click through the phases below to see how datasets and model behaviors change.</>
+              )}
+              {activeLevel === "researcher" && (
+                "Aligning neural representations to human intent requires transitioning from unconstrained next-token prediction to preference-guided policy optimization. Click through the stages below to analyze dataset schemas and training paradigms across the alignment stack."
+              )}
             </p>
           </div>
 
@@ -688,24 +941,60 @@ export default function LearnPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start mb-6">
             <div className="text-text-secondary text-sm sm:text-base leading-relaxed space-y-4">
-              <p>
-                At <TechTerm term="Inference">inference</TechTerm>, an <TechTerm term="LLM">LLM</TechTerm> outputs logits (raw scores) for every <TechTerm term="Token">token</TechTerm> in its vocabulary.
-                These are turned into probabilities using <TechTerm term="Softmax"><strong>Softmax</strong></TechTerm>. We control the
-                randomness and diversity of outputs using two <TechTerm term="Parameter">parameters</TechTerm>:
-              </p>
-              <ul className="space-y-3 pl-2 text-xs sm:text-sm">
-                <li>
-                  <strong>🌡️ <TechTerm term="Temperature">Temperature</TechTerm>:</strong> Controls distribution scale. Low temperature
-                  (&lt; 0.5) compresses values, sharpening the peaks so the model repeatedly picks the
-                  absolute highest score (factual/<TechTerm term="Deterministic">deterministic</TechTerm>). High temperature (&gt; 1.0) flattens
-                  the curves, increasing diversity (creative/unpredictable).
-                </li>
-                <li>
-                  <strong>🎯 Top-P (Nucleus Sampling):</strong> <TechTerm term="Truncate">Truncates</TechTerm> the probability distribution
-                  to include only a subset whose cumulative sum is under $P$. <TechTerm term="Token">Tokens</TechTerm> in the tail whose sum exceeds
-                  $P$ are completely discarded.
-                </li>
-              </ul>
+              {activeLevel === "casual" && (
+                <>
+                  <p>
+                    When generating a reply, the <TechTerm term="LLM">LLM</TechTerm> predicts scores for all words in its vocabulary. We convert these scores into percentages using a formula called <TechTerm term="Softmax"><strong>Softmax</strong></TechTerm>. We control how the model picks the next word using two controls:
+                  </p>
+                  <ul className="space-y-3 pl-2 text-xs sm:text-sm">
+                    <li>
+                      <strong>🌡️ <TechTerm term="Temperature">Temperature</TechTerm>:</strong> Controls the model&apos;s creativity. Low temperature
+                      makes the model pick only the highest-scoring words, leading to safe, <TechTerm term="Deterministic">deterministic</TechTerm> replies. High temperature spreads the scores out, making the output creative and unexpected.
+                    </li>
+                    <li>
+                      <strong>🎯 Top-P (Nucleus Sampling):</strong> <TechTerm term="Truncate">Truncates</TechTerm> or cuts off the list of choices, keeping only the top candidates whose sum is under $P$. This discards unlikely words in the tail of the distribution.
+                    </li>
+                  </ul>
+                </>
+              )}
+              {activeLevel === "developer" && (
+                <>
+                  <p>
+                    At <TechTerm term="Inference">inference</TechTerm>, an <TechTerm term="LLM">LLM</TechTerm> outputs logits (raw scores) for every <TechTerm term="Token">token</TechTerm> in its vocabulary.
+                    These are turned into probabilities using <TechTerm term="Softmax"><strong>Softmax</strong></TechTerm>. We control the
+                    randomness and diversity of outputs using two <TechTerm term="Parameter">parameters</TechTerm>:
+                  </p>
+                  <ul className="space-y-3 pl-2 text-xs sm:text-sm">
+                    <li>
+                      <strong>🌡️ <TechTerm term="Temperature">Temperature</TechTerm>:</strong> Controls distribution scale. Low temperature
+                      (&lt; 0.5) compresses values, sharpening the peaks so the model repeatedly picks the
+                      absolute highest score (factual/<TechTerm term="Deterministic">deterministic</TechTerm>). High temperature (&gt; 1.0) flattens
+                      the curves, increasing diversity (creative/unpredictable).
+                    </li>
+                    <li>
+                      <strong>🎯 Top-P (Nucleus Sampling):</strong> <TechTerm term="Truncate">Truncates</TechTerm> the probability distribution
+                      to include only a subset whose cumulative sum is under $P$. <TechTerm term="Token">Tokens</TechTerm> in the tail whose sum exceeds
+                      $P$ are completely discarded.
+                    </li>
+                  </ul>
+                </>
+              )}
+              {activeLevel === "researcher" && (
+                <>
+                  <p>
+                    At each step of autoregressive <TechTerm term="Inference">inference</TechTerm>, the model projects hidden states to output logits <MathVar symbol="z_i" /> for all tokens in the vocabulary. These are mapped to a probability distribution using <TechTerm term="Softmax"><strong>Softmax</strong></TechTerm> scaling. We modify the entropy of this distribution using two hyperparameters:
+                  </p>
+                  <ul className="space-y-3 pl-2 text-xs sm:text-sm">
+                    <li>
+                      <strong>🌡️ <TechTerm term="Temperature">Temperature</TechTerm> (<MathVar symbol="T" />):</strong> Scaling logits by dividing them by <MathVar symbol="T" /> prior to exponentiation. When <MathVar symbol="T" /> approaches 0, the distribution converges to a one-hot argmax vector (<TechTerm term="Deterministic">deterministic</TechTerm> greedy decoding). When <MathVar symbol="T" /> increases, the entropy increases, flattening the probability density function.
+                    </li>
+                    <li>
+                      <strong>🎯 Top-P (Nucleus Sampling):</strong> <TechTerm term="Truncate">Truncates</TechTerm> the vocabulary to include only the minimal subset of tokens whose cumulative probability exceeds threshold $P$. This dynamically clips the probability tail based on prediction confidence.
+                    </li>
+                  </ul>
+                  <SoftmaxFormula />
+                </>
+              )}
             </div>
 
             {/* Interactive Simulator */}
@@ -826,8 +1115,15 @@ export default function LearnPage() {
                   Retrieval-Augmented Generation (RAG)
                 </h3>
                 <p className="text-xs text-text-secondary leading-relaxed mb-4">
-                  <TechTerm term="LLM">LLMs</TechTerm> have knowledge cutoff limits. <TechTerm term="RAG">RAG</TechTerm> resolves this by fetching <TechTerm term="external">external</TechTerm> sources
-                  dynamically from a <TechTerm term="vector">vector</TechTerm> store, then feeding the data to the <TechTerm term="LLM">LLM</TechTerm> <TechTerm term="Context">context</TechTerm> <span className="text-text-muted">[Lewis et al. 2020]</span>.
+                  {activeLevel === "casual" && (
+                    "AI models have a memory limit and don't know about recent news. RAG fixes this. When you ask a question, the system searches an external library (like a database) for relevant articles, then copies and pastes that info directly into the AI's question context so it can write an accurate answer without guessing."
+                  )}
+                  {activeLevel === "developer" && (
+                    <><TechTerm term="LLM">LLMs</TechTerm> have knowledge cutoff limits. <TechTerm term="RAG">RAG</TechTerm> resolves this by fetching <TechTerm term="external">external</TechTerm> sources dynamically from a <TechTerm term="vector">vector</TechTerm> store, then feeding the data to the <TechTerm term="LLM">LLM</TechTerm> <TechTerm term="Context">context</TechTerm> <span className="text-text-muted">[Lewis et al. 2020]</span>.</>
+                  )}
+                  {activeLevel === "researcher" && (
+                    <>Parametric knowledge in <TechTerm term="LLM">LLMs</TechTerm> is static. <TechTerm term="RAG">RAG</TechTerm> bypasses this constraint by projecting user queries into a joint embedding space, performing similarity search over <TechTerm term="external">external</TechTerm> document collections, and prepending retrieved tokens into the model&apos;s active <TechTerm term="Context">context</TechTerm> window.</>
+                  )}
                 </p>
 
                 {/* Steps container */}
@@ -884,7 +1180,15 @@ export default function LearnPage() {
                   Autonomous Agentic Loops (ReAct)
                 </h3>
                 <p className="text-xs text-text-secondary leading-relaxed mb-4">
-                  Rather than single-step execution, agents run <TechTerm term="loops">loops</TechTerm> (<TechTerm term="Reason-Act-Observe">Reason-Act-Observe</TechTerm>). They review their thoughts and <TechTerm term="call">call</TechTerm> <TechTerm term="external">external</TechTerm> tools iteratively <span className="text-text-muted">[Yao et al. 2022]</span>.
+                  {activeLevel === "casual" && (
+                    "Instead of just writing the first answer that comes to mind, AI agents can run loops (Reason-Act-Observe). They think about a plan, call tools like calculators or web search to get facts, see the result, and repeat the loop until they are sure they have the right answer."
+                  )}
+                  {activeLevel === "developer" && (
+                    <>Rather than single-step execution, agents run <TechTerm term="loops">loops</TechTerm> (<TechTerm term="Reason-Act-Observe">Reason-Act-Observe</TechTerm>). They review their thoughts and <TechTerm term="call">call</TechTerm> <TechTerm term="external">external</TechTerm> tools iteratively <span className="text-text-muted">[Yao et al. 2022]</span>.</>
+                  )}
+                  {activeLevel === "researcher" && (
+                    <>Rather than single-step feedforward generation, agentic architectures instantiate iterative execution <TechTerm term="loops">loops</TechTerm> (typically following ReAct paradigms: <TechTerm term="Reason-Act-Observe">Reason-Act-Observe</TechTerm>). The model generates trace reasoning steps, executes discrete tool <TechTerm term="call">calls</TechTerm> targeting <TechTerm term="external">external</TechTerm> environments, and parses feedback observations to update its policy state.</>
+                  )}
                 </p>
 
                 {/* Step controls */}
