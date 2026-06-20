@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/immutability */
 "use client";
 
 import { useMemo, useEffect, useRef, useState, useCallback, type ReactNode } from "react";
@@ -56,24 +57,39 @@ function useInView(threshold = 0.15) {
 
 function useParallax() {
   const ref = useRef<HTMLDivElement>(null);
-  const [offset, setOffset] = useState(0);
   const rafRef = useRef<number>(0);
 
   useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const statEl = el.querySelector(".parallax-stat") as HTMLElement | null;
+    const watermarkEl = el.querySelector(".parallax-watermark") as HTMLElement | null;
+
     function onScroll() {
       if (rafRef.current) return;
       rafRef.current = requestAnimationFrame(() => {
         rafRef.current = 0;
-        const el = ref.current;
         if (!el) return;
         const rect = el.getBoundingClientRect();
         const vh = window.innerHeight;
-        // 0 when centered, -1 when above viewport, 1 when below
+        
+        // Only run if visible in viewport
+        if (rect.bottom < 0 || rect.top > vh) return;
+
         const center = rect.top + rect.height / 2;
         const normalized = (center - vh / 2) / (vh / 2);
-        setOffset(Math.max(-1, Math.min(1, normalized)));
+        const offset = Math.max(-1, Math.min(1, normalized));
+
+        if (statEl) {
+          statEl.style.transform = `translateY(${offset * 15}px)`;
+        }
+        if (watermarkEl) {
+          watermarkEl.style.transform = `translateY(${offset * -25}px)`;
+        }
       });
     }
+
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
     return () => {
@@ -82,7 +98,7 @@ function useParallax() {
     };
   }, []);
 
-  return { ref, offset };
+  return { ref };
 }
 
 // ============================================================================
@@ -237,7 +253,7 @@ function MiniChart({ children, height = 200 }: { children: (w: number, h: number
 
 function InsightCard({ insight, index }: { insight: InsightSection; index: number }) {
   const { ref: inViewRef, visible } = useInView(0.1);
-  const { ref: parallaxRef, offset } = useParallax();
+  const { ref: parallaxRef } = useParallax();
   const accentBarRef = useRef<HTMLDivElement>(null);
 
   // Merge refs
@@ -252,17 +268,12 @@ function InsightCard({ insight, index }: { insight: InsightSection; index: numbe
   // Slide direction: odd from left, even from right
   const slideFrom = index % 2 === 0 ? "-translate-x-8" : "translate-x-8";
 
-  // Parallax: stat moves at 0.15× rate relative to card
-  const statParallaxY = offset * 15; // px
-  // Section number watermark parallax (moves faster, opposite direction)
-  const watermarkY = offset * -25;
-
   return (
     <div
       ref={mergedRef}
       id={insight.id}
       className={`
-        relative rounded-2xl glass overflow-hidden transition-all duration-700
+        relative rounded-2xl glass overflow-visible transition-all duration-700
         ${visible ? "opacity-100 translate-x-0 translate-y-0" : `opacity-0 ${slideFrom} translate-y-8`}
       `}
       style={{
@@ -283,11 +294,10 @@ function InsightCard({ insight, index }: { insight: InsightSection; index: numbe
 
       {/* Section number watermark — large, parallax, behind content */}
       <div
-        className="absolute right-4 top-4 text-[80px] sm:text-[120px] font-black leading-none pointer-events-none select-none"
+        className="parallax-watermark absolute right-4 top-4 text-[80px] sm:text-[120px] font-black leading-none pointer-events-none select-none"
         style={{
           color: insight.accentColor,
           opacity: 0.04,
-          transform: `translateY(${watermarkY}px)`,
           willChange: "transform",
         }}
       >
@@ -307,10 +317,9 @@ function InsightCard({ insight, index }: { insight: InsightSection; index: numbe
 
         {/* Big stat — parallax Y-translation + counter animation */}
         <div
-          className="text-3xl sm:text-4xl lg:text-5xl font-black bg-clip-text text-transparent mb-6 leading-tight"
+          className="parallax-stat text-3xl sm:text-4xl lg:text-5xl font-black bg-clip-text text-transparent mb-6 leading-tight"
           style={{
             backgroundImage: insight.statGradient,
-            transform: `translateY(${statParallaxY}px)`,
             willChange: "transform",
           }}
         >
@@ -582,8 +591,6 @@ export function InsightsView() {
     chinaCount,
     efficiencyCum,
     totalEfficiency,
-    archByYear,
-    innovationDensity,
     safetyFamilyCount,
     rlhfCount,
     specializedCounts,
@@ -709,48 +716,59 @@ export function InsightsView() {
       analysis:
         "In 2021, every major model was closed and proprietary. By 2024, open-weight and open-source models made up the majority of releases. Meta's LLaMA leak in 2023 was the spark — once researchers could study and fine-tune frontier-class models, the community produced an explosion of derivatives. This democratization may be the most consequential trend in AI history.",
       chart: (
-        <MiniChart>
-          {(w, h) => {
-            const M = { top: 12, right: 8, bottom: 28, left: 32 };
-            const iW = w - M.left - M.right;
-            const iH = h - M.top - M.bottom;
-            const filteredYears = YEARS.filter((y) => modelsByYear[y] > 0);
-            const maxVal = Math.max(...filteredYears.map((y) => modelsByYear[y]));
-            const x = d3.scaleBand<number>().domain(filteredYears).range([0, iW]).padding(0.25);
-            const y = d3.scaleLinear().domain([0, maxVal + 5]).range([iH, 0]);
-            return (
-              <svg width={w} height={h}>
-                <g transform={`translate(${M.left},${M.top})`}>
-                  {filteredYears.map((yr) => {
-                    const bx = x(yr)!;
-                    const bw = x.bandwidth();
-                    const cl = opennessByYear[yr].closed;
-                    const op = opennessByYear[yr].open;
-                    return (
-                      <g key={yr}>
-                        <rect x={bx} y={y(cl + op)} width={bw} height={iH - y(cl + op)} rx={3} fill="#ef4444" opacity={0.3} />
-                        <rect x={bx} y={y(cl + op)} width={bw} height={iH - y(op) > 0 ? y(cl) - y(cl + op) : 0} rx={0} fill="#ef4444" opacity={0.7} />
-                        <rect x={bx} y={y(op)} width={bw} height={iH - y(op)} rx={0} fill="#10b981" opacity={0.8} />
-                      </g>
-                    );
-                  })}
-                  <g transform={`translate(0,${iH})`}>
-                    {filteredYears.map((yr) => (
-                      <text key={yr} x={x(yr)! + x.bandwidth() / 2} y={16} textAnchor="middle" className="fill-text-muted text-[9px]">
-                        {String(yr).slice(2)}
+        <div className="flex flex-col gap-3">
+          <MiniChart>
+            {(w, h) => {
+              const M = { top: 12, right: 8, bottom: 28, left: 32 };
+              const iW = w - M.left - M.right;
+              const iH = h - M.top - M.bottom;
+              const filteredYears = YEARS.filter((y) => modelsByYear[y] > 0);
+              const maxVal = Math.max(...filteredYears.map((y) => modelsByYear[y]));
+              const x = d3.scaleBand<number>().domain(filteredYears).range([0, iW]).padding(0.25);
+              const y = d3.scaleLinear().domain([0, maxVal + 5]).range([iH, 0]);
+              return (
+                <svg width={w} height={h}>
+                  <g transform={`translate(${M.left},${M.top})`}>
+                    {filteredYears.map((yr) => {
+                      const bx = x(yr)!;
+                      const bw = x.bandwidth();
+                      const cl = opennessByYear[yr].closed;
+                      const op = opennessByYear[yr].open;
+                      return (
+                        <g key={yr}>
+                          <rect x={bx} y={y(cl + op)} width={bw} height={y(op) - y(cl + op)} rx={0} fill="#ef4444" opacity={0.7} />
+                          <rect x={bx} y={y(op)} width={bw} height={iH - y(op)} rx={0} fill="#10b981" opacity={0.8} />
+                        </g>
+                      );
+                    })}
+                    <g transform={`translate(0,${iH})`}>
+                      {filteredYears.map((yr) => (
+                        <text key={yr} x={x(yr)! + x.bandwidth() / 2} y={16} textAnchor="middle" className="fill-text-muted text-[9px]">
+                          {String(yr).slice(2)}
+                        </text>
+                      ))}
+                    </g>
+                    {y.ticks(4).map((t) => (
+                      <text key={t} x={-6} y={y(t)} textAnchor="end" dominantBaseline="middle" className="fill-text-muted text-[9px]">
+                        {t}
                       </text>
                     ))}
                   </g>
-                  {y.ticks(4).map((t) => (
-                    <text key={t} x={-6} y={y(t)} textAnchor="end" dominantBaseline="middle" className="fill-text-muted text-[9px]">
-                      {t}
-                    </text>
-                  ))}
-                </g>
-              </svg>
-            );
-          }}
-        </MiniChart>
+                </svg>
+              );
+            }}
+          </MiniChart>
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-[10px] text-text-muted">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-sm shrink-0 bg-[#ef4444] opacity-70" />
+              <span>Closed Models</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-sm shrink-0 bg-[#10b981] opacity-80" />
+              <span>Open Models</span>
+            </div>
+          </div>
+        </div>
       ),
     },
 
@@ -1000,78 +1018,79 @@ export function InsightsView() {
       accentColor: "#22d3ee",
       analysis:
         "Early AI was text-only. Now, over half of new models handle multiple modalities — images, audio, video, and code. The trend is unmistakable: the future of AI is models that can see, hear, speak, code, and reason simultaneously. The arrival of models like GPT-4o (text+image+audio) and Gemini 2.0 (text+image+video) marks the beginning of truly general-purpose AI.",
-      chart: (
-        <MiniChart>
-          {(w, h) => {
-            const M = { top: 12, right: 8, bottom: 28, left: 32 };
-            const iW = w - M.left - M.right;
-            const iH = h - M.top - M.bottom;
-            const filteredYears = YEARS.filter((y) => modelsByYear[y] > 0);
-            const modalities = ["text", "multimodal", "code", "image", "audio", "video"];
-            const modColors: Record<string, string> = {
-              text: "#8b5cf6",
-              multimodal: "#06b6d4",
-              code: "#10b981",
-              image: "#ec4899",
-              audio: "#f59e0b",
-              video: "#f43f5e",
-            };
-            const maxStack = Math.max(
-              ...filteredYears.map((y) => Object.values(modalityByYear[y]).reduce((a, b) => a + b, 0))
-            );
-            const x = d3.scaleBand<number>().domain(filteredYears).range([0, iW]).padding(0.2);
-            const y = d3.scaleLinear().domain([0, maxStack + 3]).range([iH, 0]);
-            return (
-              <svg width={w} height={h}>
-                <g transform={`translate(${M.left},${M.top})`}>
-                  {filteredYears.map((yr) => {
-                    const bx = x(yr)!;
-                    const bw = x.bandwidth();
-                    let cumY = 0;
-                    return (
-                      <g key={yr}>
-                        {modalities.map((mod) => {
-                          const val = modalityByYear[yr][mod] || 0;
-                          if (val === 0) return null;
-                          const segY = y(cumY + val);
-                          const segH = y(cumY) - segY;
-                          cumY += val;
-                          return (
-                            <rect key={mod} x={bx} y={segY} width={bw} height={segH} fill={modColors[mod] || "#666"} opacity={0.75} rx={1} />
-                          );
-                        })}
+      chart: (() => {
+        const modalities = ["text", "multimodal", "code", "image", "audio", "video"];
+        const modColors: Record<string, string> = {
+          text: "#8b5cf6",
+          multimodal: "#06b6d4",
+          code: "#10b981",
+          image: "#ec4899",
+          audio: "#f59e0b",
+          video: "#f43f5e",
+        };
+        return (
+          <div className="flex flex-col gap-3">
+            <MiniChart>
+              {(w, h) => {
+                const M = { top: 12, right: 8, bottom: 18, left: 32 };
+                const iW = w - M.left - M.right;
+                const iH = h - M.top - M.bottom;
+                const filteredYears = YEARS.filter((y) => modelsByYear[y] > 0);
+                const maxStack = Math.max(
+                  ...filteredYears.map((y) => Object.values(modalityByYear[y]).reduce((a, b) => a + b, 0))
+                );
+                const x = d3.scaleBand<number>().domain(filteredYears).range([0, iW]).padding(0.2);
+                const y = d3.scaleLinear().domain([0, maxStack + 3]).range([iH, 0]);
+                return (
+                  <svg width={w} height={h}>
+                    <g transform={`translate(${M.left},${M.top})`}>
+                      {filteredYears.map((yr) => {
+                        const bx = x(yr)!;
+                        const bw = x.bandwidth();
+                        let cumY = 0;
+                        return (
+                          <g key={yr}>
+                            {modalities.map((mod) => {
+                              const val = modalityByYear[yr][mod] || 0;
+                              if (val === 0) return null;
+                              const segY = y(cumY + val);
+                              const segH = y(cumY) - segY;
+                              cumY += val;
+                              return (
+                                <rect key={mod} x={bx} y={segY} width={bw} height={segH} fill={modColors[mod] || "#666"} opacity={0.75} rx={1} />
+                              );
+                            })}
+                          </g>
+                        );
+                      })}
+                      <g transform={`translate(0,${iH})`}>
+                        {filteredYears.map((yr) => (
+                          <text key={yr} x={x(yr)! + x.bandwidth() / 2} y={16} textAnchor="middle" className="fill-text-muted text-[9px]">
+                            {String(yr).slice(2)}
+                          </text>
+                        ))}
                       </g>
-                    );
-                  })}
-                  <g transform={`translate(0,${iH})`}>
-                    {filteredYears.map((yr) => (
-                      <text key={yr} x={x(yr)! + x.bandwidth() / 2} y={16} textAnchor="middle" className="fill-text-muted text-[9px]">
-                        {String(yr).slice(2)}
-                      </text>
-                    ))}
-                  </g>
-                  {y.ticks(4).map((t) => (
-                    <text key={t} x={-6} y={y(t)} textAnchor="end" dominantBaseline="middle" className="fill-text-muted text-[9px]">
-                      {t}
-                    </text>
-                  ))}
-                </g>
-                {/* Legend */}
-                <g transform={`translate(${M.left + 4}, ${h - 4})`}>
-                  {modalities.slice(0, 4).map((mod, i) => (
-                    <g key={mod} transform={`translate(${i * (iW / 4)}, 0)`}>
-                      <rect width={8} height={8} rx={2} fill={modColors[mod]} opacity={0.8} y={-8} />
-                      <text x={12} className="fill-text-muted text-[8px]" dominantBaseline="middle">
-                        {mod}
-                      </text>
+                      {y.ticks(4).map((t) => (
+                        <text key={t} x={-6} y={y(t)} textAnchor="end" dominantBaseline="middle" className="fill-text-muted text-[9px]">
+                          {t}
+                        </text>
+                      ))}
                     </g>
-                  ))}
-                </g>
-              </svg>
-            );
-          }}
-        </MiniChart>
-      ),
+                  </svg>
+                );
+              }}
+            </MiniChart>
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-[10px] text-text-muted">
+              {modalities.map((mod) => (
+                <div key={mod} className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: modColors[mod], opacity: 0.8 }} />
+                  <span className="capitalize">{mod}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })(),
     },
 
     // 9. Reasoning Revolution
@@ -1143,71 +1162,74 @@ export function InsightsView() {
       analysis:
         "China has emerged as the world's second AI superpower. Companies like DeepSeek proved that innovative architecture (MLA, multi-head latent attention) can compete with brute-force scaling. Moonshot AI's Kimi K2 (1 trillion parameters, open-weight) and MiniMax-01 (4 million token context) show that Chinese labs are no longer following — they're leading on specific frontiers. The US-China AI race is now the defining dynamic of the industry, with implications for regulation, export controls, and the future of open research.",
       chart: (
-        <MiniChart height={220}>
-          {(w, h) => {
-            const M = { top: 16, right: 16, bottom: 28, left: 32 };
-            const iW = w - M.left - M.right;
-            const iH = h - M.top - M.bottom;
-            const filteredYears = YEARS.filter((y) => usByYear[y] > 0 || chinaByYear[y] > 0);
-            const maxVal = Math.max(...filteredYears.map((y) => usByYear[y] + chinaByYear[y]));
-            const x = d3.scaleBand<number>().domain(filteredYears).range([0, iW]).padding(0.2);
-            const y = d3.scaleLinear().domain([0, maxVal + 3]).range([iH, 0]);
-            return (
-              <svg width={w} height={h}>
-                <defs>
-                  <linearGradient id="g-china" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#f43f5e" />
-                    <stop offset="100%" stopColor="#be123c" />
-                  </linearGradient>
-                  <linearGradient id="g-us" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#3b82f6" />
-                    <stop offset="100%" stopColor="#1d4ed8" />
-                  </linearGradient>
-                </defs>
-                <g transform={`translate(${M.left},${M.top})`}>
-                  {y.ticks(4).map((t) => (
-                    <line key={t} x1={0} x2={iW} y1={y(t)} y2={y(t)} stroke="rgba(255,255,255,0.06)" strokeDasharray="4 4" />
-                  ))}
-                  {filteredYears.map((yr) => {
-                    const bx = x(yr)!;
-                    const bw = x.bandwidth() / 2 - 1;
-                    const usVal = usByYear[yr];
-                    const cnVal = chinaByYear[yr];
-                    return (
-                      <g key={yr}>
-                        <rect x={bx} y={y(usVal)} width={bw} height={iH - y(usVal)} rx={3} fill="url(#g-us)" opacity={0.8} />
-                        <rect x={bx + bw + 2} y={y(cnVal)} width={bw} height={iH - y(cnVal)} rx={3} fill="url(#g-china)" opacity={0.8} />
-                        {usVal > 0 && <text x={bx + bw / 2} y={y(usVal) - 4} textAnchor="middle" className="fill-text-secondary text-[8px] font-medium">{usVal}</text>}
-                        {cnVal > 0 && <text x={bx + bw + 2 + bw / 2} y={y(cnVal) - 4} textAnchor="middle" className="fill-text-secondary text-[8px] font-medium">{cnVal}</text>}
-                      </g>
-                    );
-                  })}
-                  <g transform={`translate(0,${iH})`}>
-                    {filteredYears.map((yr) => (
-                      <text key={yr} x={x(yr)! + x.bandwidth() / 2} y={16} textAnchor="middle" className="fill-text-muted text-[9px]">
-                        {String(yr).slice(2)}
+        <div className="flex flex-col gap-3">
+          <MiniChart height={220}>
+            {(w, h) => {
+              const M = { top: 16, right: 16, bottom: 18, left: 32 };
+              const iW = w - M.left - M.right;
+              const iH = h - M.top - M.bottom;
+              const filteredYears = YEARS.filter((y) => usByYear[y] > 0 || chinaByYear[y] > 0);
+              const maxVal = Math.max(...filteredYears.map((y) => usByYear[y] + chinaByYear[y]));
+              const x = d3.scaleBand<number>().domain(filteredYears).range([0, iW]).padding(0.2);
+              const y = d3.scaleLinear().domain([0, maxVal + 3]).range([iH, 0]);
+              return (
+                <svg width={w} height={h}>
+                  <defs>
+                    <linearGradient id="g-china" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#f43f5e" />
+                      <stop offset="100%" stopColor="#be123c" />
+                    </linearGradient>
+                    <linearGradient id="g-us" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#3b82f6" />
+                      <stop offset="100%" stopColor="#1d4ed8" />
+                    </linearGradient>
+                  </defs>
+                  <g transform={`translate(${M.left},${M.top})`}>
+                    {y.ticks(4).map((t) => (
+                      <line key={t} x1={0} x2={iW} y1={y(t)} y2={y(t)} stroke="rgba(255,255,255,0.06)" strokeDasharray="4 4" />
+                    ))}
+                    {filteredYears.map((yr) => {
+                      const bx = x(yr)!;
+                      const bw = x.bandwidth() / 2 - 1;
+                      const usVal = usByYear[yr];
+                      const cnVal = chinaByYear[yr];
+                      return (
+                        <g key={yr}>
+                          <rect x={bx} y={y(usVal)} width={bw} height={iH - y(usVal)} rx={3} fill="url(#g-us)" opacity={0.8} />
+                          <rect x={bx + bw + 2} y={y(cnVal)} width={bw} height={iH - y(cnVal)} rx={3} fill="url(#g-china)" opacity={0.8} />
+                          {usVal > 0 && <text x={bx + bw / 2} y={y(usVal) - 4} textAnchor="middle" className="fill-text-secondary text-[8px] font-medium">{usVal}</text>}
+                          {cnVal > 0 && <text x={bx + bw + 2 + bw / 2} y={y(cnVal) - 4} textAnchor="middle" className="fill-text-secondary text-[8px] font-medium">{cnVal}</text>}
+                        </g>
+                      );
+                    })}
+                    <g transform={`translate(0,${iH})`}>
+                      {filteredYears.map((yr) => (
+                        <text key={yr} x={x(yr)! + x.bandwidth() / 2} y={16} textAnchor="middle" className="fill-text-muted text-[9px]">
+                          {String(yr).slice(2)}
+                        </text>
+                      ))}
+                    </g>
+                    {y.ticks(4).map((t) => (
+                      <text key={t} x={-6} y={y(t)} textAnchor="end" dominantBaseline="middle" className="fill-text-muted text-[9px]">
+                        {t}
                       </text>
                     ))}
                   </g>
-                  {y.ticks(4).map((t) => (
-                    <text key={t} x={-6} y={y(t)} textAnchor="end" dominantBaseline="middle" className="fill-text-muted text-[9px]">
-                      {t}
-                    </text>
-                  ))}
-                </g>
-                {/* Legend */}
-                <g transform={`translate(${M.left + 4}, ${h - 4})`}>
-                  <rect width={8} height={8} rx={2} fill="#3b82f6" opacity={0.8} y={-8} />
-                  <text x={12} className="fill-text-muted text-[8px]" dominantBaseline="middle">US</text>
-                  <g transform="translate(40, 0)">
-                    <rect width={8} height={8} rx={2} fill="#f43f5e" opacity={0.8} y={-8} />
-                    <text x={12} className="fill-text-muted text-[8px]" dominantBaseline="middle">China</text>
-                  </g>
-                </g>
-              </svg>
-            );
-          }}
-        </MiniChart>
+                </svg>
+              );
+            }}
+          </MiniChart>
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-[10px] text-text-muted">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-sm shrink-0 bg-[#3b82f6] opacity-80" />
+              <span>United States</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-sm shrink-0 bg-[#f43f5e] opacity-80" />
+              <span>China</span>
+            </div>
+          </div>
+        </div>
       ),
     },
 
@@ -1293,7 +1315,6 @@ export function InsightsView() {
               { year: 2024, label: "ShieldGemma", color: "#3b82f6" },
             ];
             const x = d3.scaleLinear().domain([2016, 2025]).range([0, iW]);
-            const rowH = iH / milestones.length;
             return (
               <svg width={w} height={h}>
                 <g transform={`translate(${M.left},${M.top})`}>
@@ -1494,7 +1515,7 @@ function WhatNextCard({
       ref={ref}
       id="whats-next"
       className={`
-        relative rounded-2xl overflow-hidden transition-all duration-700
+        relative rounded-2xl overflow-visible transition-all duration-700
         ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}
       `}
     >

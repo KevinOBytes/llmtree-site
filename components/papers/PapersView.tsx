@@ -476,7 +476,7 @@ const PaperCard = forwardRef<
               {relatedModels.map((model) => (
                 <Link
                   key={model.id}
-                  href="/models"
+                  href={`/models/${model.id}`}
                   className="text-[10px] px-2 py-0.5 rounded-full bg-accent-cyan/10 text-accent-cyan border border-accent-cyan/20 hover:bg-accent-cyan/20 transition-colors"
                 >
                   {model.name}

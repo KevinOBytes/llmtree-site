@@ -9,6 +9,8 @@ interface ViewControlsProps {
   onViewDimensionChange: (dim: "2d" | "3d") => void;
   motionEnabled: boolean;
   onMotionEnabledChange: (enabled: boolean) => void;
+  layoutMode: "timeline" | "ancestry" | "network";
+  onLayoutModeChange: (mode: "timeline" | "ancestry" | "network") => void;
 }
 
 export function ViewControls({
@@ -16,9 +18,26 @@ export function ViewControls({
   onViewDimensionChange,
   motionEnabled,
   onMotionEnabledChange,
+  layoutMode,
+  onLayoutModeChange,
 }: ViewControlsProps) {
   return (
     <div className="flex items-center gap-3 flex-wrap">
+      {/* ── Layout Mode Toggle (Only applicable or visible in 2D mode) ── */}
+      {viewDimension === "2d" && (
+        <ToggleGroup
+          label="Layout"
+          options={[
+            { key: "timeline" as const, label: "Timeline" },
+            { key: "ancestry" as const, label: "Ancestry" },
+            { key: "network" as const, label: "Network" },
+          ]}
+          value={layoutMode}
+          onChange={onLayoutModeChange}
+          activeClassName="bg-accent-emerald text-white shadow-[0_0_12px_rgba(16,185,129,0.35)]"
+        />
+      )}
+
       {/* ── Dimension Toggle ─────────────────────────────────────────────── */}
       <ToggleGroup
         label="View"
@@ -77,7 +96,7 @@ interface ToggleOption<T> {
 
 interface ToggleGroupProps<T> {
   label: string;
-  options: [ToggleOption<T>, ToggleOption<T>];
+  options: ToggleOption<T>[];
   value: T;
   onChange: (value: T) => void;
   activeClassName: string;

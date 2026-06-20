@@ -1,7 +1,8 @@
+/* eslint-disable react-hooks/immutability */
 "use client";
 
-import { useRef, useMemo, useEffect, useCallback, useState } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { useRef, useMemo, useCallback } from "react";
+import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Text, Billboard } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import * as THREE from "three";
@@ -91,7 +92,6 @@ function GraphScene({
   const meshRefs = useRef<Map<string, THREE.Mesh>>(new Map());
   const lineRef = useRef<THREE.LineSegments>(null);
   const hoveredRef = useRef<string | null>(null);
-  const { camera } = useThree();
 
   // Build line geometry for all edges
   const lineGeometry = useMemo(() => {
@@ -281,6 +281,15 @@ function GraphScene({
   );
 }
 
+function getDeterministicJitter(id: string, seed: number): number {
+  let hash = seed;
+  for (let i = 0; i < id.length; i++) {
+    hash = (hash << 5) - hash + id.charCodeAt(i);
+    hash |= 0;
+  }
+  return ((Math.abs(hash) % 1000) / 1000) - 0.5;
+}
+
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 export function ForceGraph3D({
@@ -292,11 +301,6 @@ export function ForceGraph3D({
   opennessFilter = "all",
   modalityFilter = "all",
 }: ForceGraph3DProps) {
-  const [graphData, setGraphData] = useState<{
-    nodes: Graph3DNode[];
-    links: Graph3DLink[];
-  }>({ nodes: [], links: [] });
-
   // Stable serialization of selectedFamilies for dependency tracking
   const familiesKey = Array.from(selectedFamilies).sort().join(",");
 
@@ -327,7 +331,7 @@ export function ForceGraph3D({
   }, [familiesKey, searchQuery, opennessFilter, modalityFilter]);
 
   // Run simulation and set final positions
-  useEffect(() => {
+  const graphData = useMemo(() => {
     const filteredModels = getFilteredData();
     const filteredIds = new Set(filteredModels.map((m) => m.id));
 
@@ -354,8 +358,8 @@ export function ForceGraph3D({
 
       const radius = 5 + spreadInFamily * 0.8;
       const zPos = releaseDateToNormalized(model.releaseDate) * 20 - 10;
-      const jitterX = (Math.random() - 0.5) * 2;
-      const jitterY = (Math.random() - 0.5) * 2;
+      const jitterX = getDeterministicJitter(model.id, 42) * 2;
+      const jitterY = getDeterministicJitter(model.id, 99) * 2;
 
       return {
         id: model.id,
@@ -389,7 +393,7 @@ export function ForceGraph3D({
       }
     }
 
-    setGraphData({ nodes, links });
+    return { nodes, links };
   }, [getFilteredData]);
 
   if (graphData.nodes.length === 0) {

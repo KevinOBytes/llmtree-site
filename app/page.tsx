@@ -6,23 +6,7 @@ import { FAMILY_COLORS } from "@/lib/types";
 import type { ModelFamily } from "@/lib/types";
 import { HeroTree } from "@/components/home/HeroTree";
 import { FamilyCard } from "@/components/home/FamilyCard";
-
-const FAMILY_LABELS: Record<string, string> = {
-  "openai-gpt": "OpenAI GPT",
-  "openai-o": "OpenAI o-series",
-  "anthropic-claude": "Anthropic Claude",
-  "google-gemini": "Google Gemini",
-  "google-palm": "Google PaLM",
-  "meta-llama": "Meta LLaMA",
-  mistral: "Mistral AI",
-  "xai-grok": "xAI Grok",
-  "cohere-command": "Cohere Command",
-  "microsoft-phi": "Microsoft Phi",
-  deepseek: "DeepSeek",
-  "stability-ai": "Stability AI",
-  midjourney: "Midjourney",
-  "image-gen": "Image Generation",
-};
+import { FAMILY_LABELS } from "@/lib/chartUtils";
 
 // Build family stats
 function getFamilyStats() {
@@ -214,7 +198,15 @@ export default function Home() {
       <footer className="border-t border-border-default py-8 px-4">
         <div className="mx-auto max-w-7xl flex flex-col sm:flex-row items-center justify-between gap-4 text-text-muted text-xs">
           <span>
-            © {new Date().getFullYear()} LLM Tree of Life — MIT Licensed
+            © {new Date().getFullYear()} LLM Tree of Life — Hosted by{" "}
+            <a
+              href="https://kevinbytes.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-text-secondary hover:text-text-primary underline decoration-accent-emerald/40 hover:decoration-accent-emerald transition-colors"
+            >
+              kevinbytes.com
+            </a>
           </span>
           <div className="flex items-center gap-4">
             <a

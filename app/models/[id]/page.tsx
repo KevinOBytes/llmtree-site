@@ -573,21 +573,22 @@ export default async function ModelDetailPage({ params }: PageProps) {
           )}
 
           {/* Family Siblings */}
-          <RevealSection delay={480}>
-            <div className="glass rounded-2xl p-6">
-              <FamilySiblings
-                currentId={model.id}
-                family={model.family}
-                siblings={familySiblings}
-              />
-            </div>
-          </RevealSection>
+          {familySiblings.some((m) => m.id !== model.id) && (
+            <RevealSection delay={480}>
+              <div className="glass rounded-2xl p-6">
+                <FamilySiblings
+                  currentId={model.id}
+                  family={model.family}
+                  siblings={familySiblings}
+                />
+              </div>
+            </RevealSection>
+          )}
 
           {/* Prev/Next Navigation */}
           <FamilyNavigation
             prev={prevModel}
             next={nextModel}
-            family={model.family}
           />
         </div>
       </div>

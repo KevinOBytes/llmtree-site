@@ -1,9 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { FAMILY_COLORS, type ModelNode } from "@/lib/types";
 import { models } from "@/lib/data/models";
 import { papers } from "@/lib/data/papers";
 import { GLOSSARY, INNOVATION_LABELS } from "@/lib/glossary";
+import { FAMILY_LABELS } from "@/lib/chartUtils";
 
 interface ModelDetailPanelProps {
   model: ModelNode;
@@ -129,6 +131,7 @@ export function ModelDetailPanel({
         {/* Meta info grid */}
         <div className="grid grid-cols-2 gap-3">
           <InfoItem label="Company" value={model.company} />
+          <InfoItem label="Family" value={FAMILY_LABELS[model.family] || model.family} />
           <InfoItem label="Released" value={formatDate(model.releaseDate)} />
           {model.parameterCount && (
             <InfoItem label="Parameters" value={model.parameterCount} />
@@ -399,6 +402,13 @@ export function ModelDetailPanel({
 
         {/* Links */}
         <div className="flex flex-col gap-2 pt-2 border-t border-border-default">
+          <Link
+            href={`/models/${model.id}`}
+            className="text-sm font-semibold text-accent-emerald hover:underline flex items-center gap-1 group/link"
+          >
+            📊 View Full Profile
+            <span className="inline-block transition-transform duration-200 group-hover/link:translate-x-0.5">→</span>
+          </Link>
           {model.paperUrl && (
             <a
               href={model.paperUrl}

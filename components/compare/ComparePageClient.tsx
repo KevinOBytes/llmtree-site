@@ -49,14 +49,14 @@ export function ComparePageClient() {
           <div className="flex items-center gap-2">
             <span className="text-accent-cyan text-lg">◆</span>
             <span className="text-xs font-medium uppercase tracking-wider text-text-muted">
-              New Section
+              Research & Infrastructure
             </span>
             <span className="text-accent-violet text-lg">◆</span>
           </div>
           <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border-default to-transparent" />
         </div>
         <h2 className="text-2xl font-bold text-text-primary mb-1">
-          Research &amp; Hardware
+          Research & Hardware
         </h2>
         <p className="text-sm text-text-muted">
           Papers that shaped the field and the hardware that made it possible

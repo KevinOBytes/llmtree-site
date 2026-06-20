@@ -12,6 +12,7 @@
   --color-surface-elevated: #22223a;
 
   --color-border-default: rgba(255, 255, 255, 0.08);
+  --color-border-subtle: rgba(255, 255, 255, 0.05);
   --color-border-hover: rgba(255, 255, 255, 0.15);
   --color-border-accent: rgba(139, 92, 246, 0.4);
 

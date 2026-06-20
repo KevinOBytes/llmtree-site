@@ -465,14 +465,10 @@ export function FamilySiblings({
 export function FamilyNavigation({
   prev,
   next,
-  family,
 }: {
   prev: ModelNode | null;
   next: ModelNode | null;
-  family: ModelFamily;
 }) {
-  const familyColor = FAMILY_COLORS[family];
-
   if (!prev && !next) return null;
 
   return (

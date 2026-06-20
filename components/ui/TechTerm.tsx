@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback, type ReactNode } from "react";
+import { useState, useRef, type ReactNode } from "react";
 import { GLOSSARY, glossaryLookup } from "@/lib/glossary";
 
 // ============================================================================
