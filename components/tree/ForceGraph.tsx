@@ -11,6 +11,15 @@ import {
   getModalityShape,
 } from "@/lib/vizUtils";
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 interface GraphNode extends d3.SimulationNodeDatum {
@@ -32,6 +41,7 @@ interface ForceGraph2DProps {
   motionEnabled: boolean;
   opennessFilter?: string;
   modalityFilter?: string;
+  layoutMode?: "timeline" | "ancestry" | "network";
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -44,6 +54,7 @@ export function ForceGraph2D({
   motionEnabled,
   opennessFilter = "all",
   modalityFilter = "all",
+  layoutMode = "timeline",
 }: ForceGraph2DProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -197,7 +208,7 @@ export function ForceGraph2D({
         .attr("stop-opacity", 0.15);
     });
 
-    // Background glow
+    // Background glow (re-added)
     const bgGrad = defs
       .append("radialGradient")
       .attr("id", "bg-glow")
@@ -219,63 +230,89 @@ export function ForceGraph2D({
       .attr("r", Math.min(width, height) * 0.4)
       .attr("fill", "url(#bg-glow)");
 
+    // Rank computation for Generational depth (ancestry)
+    const ranks: Record<string, number> = {};
+    const getRank = (id: string): number => {
+      if (id in ranks) return ranks[id];
+      const node = filteredModels.find((m) => m.id === id);
+      if (!node || !node.parentIds || node.parentIds.length === 0) {
+        ranks[id] = 0;
+        return 0;
+      }
+      
+      const activeParents = node.parentIds.filter((pId) => filteredIds.has(pId));
+      if (activeParents.length === 0) {
+        ranks[id] = 0;
+        return 0;
+      }
+      
+      const maxParentRank = Math.max(...activeParents.map((pId) => getRank(pId)));
+      ranks[id] = maxParentRank + 1;
+      return ranks[id];
+    };
+    
+    filteredModels.forEach((m) => getRank(m.id));
+    const maxRank = Math.max(...Object.values(ranks), 1);
+
     // ── Axis labels (year markers) ─────────────────────────────────────────
-    const minYear = 2018;
-    const maxYear = 2027;
-    const axisGroup = g.append("g").attr("class", "axis-labels");
+    if (layoutMode === "timeline") {
+      const minYear = 2018;
+      const maxYear = 2027;
+      const axisGroup = g.append("g").attr("class", "axis-labels");
 
-    for (let year = minYear; year <= 2026; year++) {
-      const t = (year - minYear) / (maxYear - minYear);
-      const yPos = height * 0.1 + t * height * 0.8;
+      for (let year = minYear; year <= 2026; year++) {
+        const t = (year - minYear) / (maxYear - minYear);
+        const yPos = height * 0.1 + t * height * 0.8;
 
-      // Subtle horizontal guide line
-      axisGroup
-        .append("line")
-        .attr("x1", 40)
-        .attr("x2", width - 20)
-        .attr("y1", yPos)
-        .attr("y2", yPos)
-        .attr("stroke", "rgba(255,255,255,0.04)")
-        .attr("stroke-width", 1)
-        .attr("stroke-dasharray", "4 8");
+        // Subtle horizontal guide line
+        axisGroup
+          .append("line")
+          .attr("x1", 40)
+          .attr("x2", width - 20)
+          .attr("y1", yPos)
+          .attr("y2", yPos)
+          .attr("stroke", "rgba(255,255,255,0.04)")
+          .attr("stroke-width", 1)
+          .attr("stroke-dasharray", "4 8");
 
-      // Year label
+        // Year label
+        axisGroup
+          .append("text")
+          .text(year.toString())
+          .attr("x", 16)
+          .attr("y", yPos + 4)
+          .attr("fill", "rgba(255,255,255,0.2)")
+          .attr("font-size", "10px")
+          .attr("font-family", "var(--font-mono)")
+          .attr("text-anchor", "start");
+      }
+
+      // "Timeline" vertical label
       axisGroup
         .append("text")
-        .text(year.toString())
-        .attr("x", 16)
-        .attr("y", yPos + 4)
-        .attr("fill", "rgba(255,255,255,0.2)")
-        .attr("font-size", "10px")
-        .attr("font-family", "var(--font-mono)")
+        .text("TIMELINE ↓")
+        .attr("x", 8)
+        .attr("y", height * 0.06)
+        .attr("fill", "rgba(255,255,255,0.25)")
+        .attr("font-size", "9px")
+        .attr("font-family", "var(--font-sans)")
+        .attr("font-weight", "600")
+        .attr("letter-spacing", "2px")
         .attr("text-anchor", "start");
+
+      // "Family" horizontal label at bottom
+      axisGroup
+        .append("text")
+        .text("← FAMILY CLUSTERING →")
+        .attr("x", width / 2)
+        .attr("y", height - 8)
+        .attr("fill", "rgba(255,255,255,0.18)")
+        .attr("font-size", "9px")
+        .attr("font-family", "var(--font-sans)")
+        .attr("font-weight", "600")
+        .attr("letter-spacing", "2px")
+        .attr("text-anchor", "middle");
     }
-
-    // "Timeline" vertical label
-    axisGroup
-      .append("text")
-      .text("TIMELINE ↓")
-      .attr("x", 8)
-      .attr("y", height * 0.06)
-      .attr("fill", "rgba(255,255,255,0.25)")
-      .attr("font-size", "9px")
-      .attr("font-family", "var(--font-sans)")
-      .attr("font-weight", "600")
-      .attr("letter-spacing", "2px")
-      .attr("text-anchor", "start");
-
-    // "Family" horizontal label at bottom
-    axisGroup
-      .append("text")
-      .text("← FAMILY CLUSTERING →")
-      .attr("x", width / 2)
-      .attr("y", height - 8)
-      .attr("fill", "rgba(255,255,255,0.18)")
-      .attr("font-size", "9px")
-      .attr("font-family", "var(--font-sans)")
-      .attr("font-weight", "600")
-      .attr("letter-spacing", "2px")
-      .attr("text-anchor", "middle");
 
     // ── Force simulation ───────────────────────────────────────────────────
     // Group models by family for horizontal clustering
@@ -286,43 +323,73 @@ export function ForceGraph2D({
       familyGroups[f] = ((i + 0.5) / familyList.length) * width;
     });
 
-    const simulation = d3
-      .forceSimulation<GraphNode>(nodes)
-      .force(
-        "link",
-        d3
-          .forceLink<GraphNode, GraphLink>(links)
-          .id((d) => d.id)
-          .distance((d) => (d.type === "parent" ? 55 : 100))
-          .strength((d) => (d.type === "parent" ? 0.8 : 0.1))
-      )
-      .force("charge", d3.forceManyBody().strength(-120).distanceMax(250))
-      .force(
-        "collision",
-        d3.forceCollide<GraphNode>().radius((d) => d.radius + 8)
-      )
-      // Family-based horizontal clustering
-      .force(
-        "x",
-        d3
-          .forceX<GraphNode>((d) => familyGroups[d.model.family] ?? width / 2)
-          .strength(0.08)
-      )
-      // Strong timeline-based vertical positioning
-      .force(
-        "y",
-        d3
-          .forceY<GraphNode>((d) => {
-            const date = new Date(d.model.releaseDate);
-            const minYear = 2018;
-            const maxYear = 2027;
-            const t =
-              (date.getFullYear() + date.getMonth() / 12 - minYear) /
-              (maxYear - minYear);
-            return height * 0.08 + t * height * 0.84;
-          })
-          .strength(0.6)
-      )
+    const simulation = d3.forceSimulation<GraphNode>(nodes);
+
+    // Link Force
+    simulation.force(
+      "link",
+      d3
+        .forceLink<GraphNode, GraphLink>(links)
+        .id((d) => d.id)
+        .distance((d) => (d.type === "parent" ? 50 : 90))
+        .strength((d) => (d.type === "parent" ? 0.8 : 0.1))
+    );
+
+    // Collision Force
+    simulation.force(
+      "collision",
+      d3.forceCollide<GraphNode>().radius((d) => d.radius + 8)
+    );
+
+    // Apply layout-specific forces
+    if (layoutMode === "timeline") {
+      simulation
+        .force("charge", d3.forceManyBody().strength(-120).distanceMax(250))
+        .force(
+          "x",
+          d3
+            .forceX<GraphNode>((d) => familyGroups[d.model.family] ?? width / 2)
+            .strength(0.08)
+        )
+        .force(
+          "y",
+          d3
+            .forceY<GraphNode>((d) => {
+              const date = new Date(d.model.releaseDate);
+              const minYear = 2018;
+              const maxYear = 2027;
+              const t =
+                (date.getFullYear() + date.getMonth() / 12 - minYear) /
+                (maxYear - minYear);
+              return height * 0.08 + t * height * 0.84;
+            })
+            .strength(0.6)
+        );
+    } else if (layoutMode === "ancestry") {
+      simulation
+        .force("charge", d3.forceManyBody().strength(-80).distanceMax(200))
+        .force(
+          "x",
+          d3
+            .forceX<GraphNode>((d) => {
+              const r = ranks[d.id] ?? 0;
+              return width * 0.08 + (r / maxRank) * width * 0.84;
+            })
+            .strength(0.855) // Strong horizontal constraint to keep in generational ranks
+        )
+        .force(
+          "y",
+          d3.forceY<GraphNode>(height / 2).strength(0.1) // Soft vertical pull
+        );
+    } else {
+      // Network (freeform clustering)
+      simulation
+        .force("charge", d3.forceManyBody().strength(-220).distanceMax(300))
+        .force("x", d3.forceX<GraphNode>(width / 2).strength(0.06))
+        .force("y", d3.forceY<GraphNode>(height / 2).strength(0.06));
+    }
+
+    simulation
       .alphaDecay(0.03)
       .velocityDecay(0.5);
 
@@ -633,63 +700,50 @@ export function ForceGraph2D({
         // Freeze simulation
         simulation.alphaTarget(0).alpha(Math.min(simulation.alpha(), 0.01));
 
-        // Highlight connected links
+        // Build full lineage set for the hovered node
+        const ancestryIds = getAncestryIds(d.id);
+        const descendantIds = getDescendantIds(d.id);
+        const lineageIds = new Set([d.id, ...ancestryIds, ...descendantIds]);
+
+        // Highlight lineage links with a glowing color trail
         link
           .transition()
           .duration(120)
           .attr("stroke", (l) => {
-            const src =
-              typeof l.source === "object"
-                ? (l.source as GraphNode).id
-                : l.source;
-            const tgt =
-              typeof l.target === "object"
-                ? (l.target as GraphNode).id
-                : l.target;
-            if (src === d.id || tgt === d.id) {
-              return l.type === "parent"
-                ? d.color
-                : "rgba(245, 158, 11, 0.8)";
+            if (l.type !== "parent") return "rgba(245, 158, 11, 0.06)";
+            if (isLineageLink(l, lineageIds)) {
+              const srcNode = typeof l.source === "object" ? (l.source as GraphNode) : nodes.find(n => n.id === l.source);
+              return srcNode?.color || d.color;
             }
-            return l.type === "parent"
-              ? "rgba(255, 255, 255, 0.04)"
-              : "rgba(245, 158, 11, 0.04)";
+            return "rgba(255, 255, 255, 0.04)";
           })
           .attr("stroke-width", (l) => {
-            const src =
-              typeof l.source === "object"
-                ? (l.source as GraphNode).id
-                : l.source;
-            const tgt =
-              typeof l.target === "object"
-                ? (l.target as GraphNode).id
-                : l.target;
-            if (src === d.id || tgt === d.id) return 2.5;
-            return l.type === "parent" ? 1 : 0.5;
+            if (l.type !== "parent") return 0.5;
+            if (isLineageLink(l, lineageIds)) return 3;
+            return 1;
+          })
+          .attr("stroke-opacity", (l) => {
+            if (isLineageLink(l, lineageIds)) return 1;
+            return 0.35;
           });
 
-        // Dim non-connected nodes
+        // Dim non-lineage nodes, keep lineage nodes bright
         node
           .transition()
           .duration(120)
-          .attr("opacity", (n) => {
-            if (n.id === d.id) return 1;
-            const isConnected = links.some((l) => {
-              const src =
-                typeof l.source === "object"
-                  ? (l.source as GraphNode).id
-                  : l.source;
-              const tgt =
-                typeof l.target === "object"
-                  ? (l.target as GraphNode).id
-                  : l.target;
-              return (
-                (src === d.id && tgt === n.id) ||
-                (tgt === d.id && src === n.id)
-              );
-            });
-            return isConnected ? 1 : 0.2;
-          });
+          .attr("opacity", (n) => (lineageIds.has(n.id) ? 1 : 0.12));
+
+        // Highlight the hovered/selected node rings specifically
+        node.each(function (n) {
+          const isActive = n.id === d.id;
+          const isSel = n.id === selectedModelId;
+          d3.select(this)
+            .select(".node-shape")
+            .transition()
+            .duration(120)
+            .attr("stroke-width", isActive || isSel ? 3.5 : 2)
+            .attr("stroke", isActive ? "#fff" : n.color);
+        });
 
         // Build tooltip HTML
         const dead = isDead(d.model);
@@ -712,10 +766,10 @@ export function ForceGraph2D({
         tooltipDiv.html(`
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
             <div style="width:8px;height:8px;border-radius:50%;background:${d.color};flex-shrink:0"></div>
-            <span style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.95)">${d.model.name}</span>
-            <span style="font-size:10px;color:rgba(255,255,255,0.35);font-family:monospace;margin-left:auto">${d.model.releaseDate}</span>
+            <span style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.95)">${escapeHtml(d.model.name)}</span>
+            <span style="font-size:10px;color:rgba(255,255,255,0.35);font-family:monospace;margin-left:auto">${escapeHtml(d.model.releaseDate)}</span>
           </div>
-          <p style="font-size:10px;color:rgba(255,255,255,0.55);line-height:1.6;margin:0 0 8px 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${d.model.description}</p>
+          <p style="font-size:10px;color:rgba(255,255,255,0.55);line-height:1.6;margin:0 0 8px 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${escapeHtml(d.model.description)}</p>
           <div style="display:flex;flex-wrap:wrap;gap:4px">${statusBadge}${openBadge}${paramHtml}${ctxHtml}${modalityHtml}</div>
         `);
 
@@ -733,22 +787,70 @@ export function ForceGraph2D({
         savedFx = null;
         savedFy = null;
 
-        // Reset links
-        link
-          .transition()
-          .duration(200)
-          .attr("stroke", (l) =>
-            l.type === "parent"
-              ? "rgba(255, 255, 255, 0.12)"
-              : "rgba(245, 158, 11, 0.12)"
-          )
-          .attr("stroke-width", (l) => (l.type === "parent" ? 1.5 : 1));
-
-        // Reset nodes
-        node.transition().duration(200).attr("opacity", 1);
-
         // Hide tooltip
         tooltipGroup.style("display", "none");
+
+        if (selectedModelId) {
+          // Restore selected model lineage highlights
+          const ancestryIds = getAncestryIds(selectedModelId);
+          const descendantIds = getDescendantIds(selectedModelId);
+          const lineageIds = new Set([selectedModelId, ...ancestryIds, ...descendantIds]);
+
+          node.transition().duration(200).attr("opacity", (n) => lineageIds.has(n.id) ? 1 : 0.12);
+
+          node.each(function (n) {
+            const isSel = n.id === selectedModelId;
+            d3.select(this)
+              .select(".node-shape")
+              .transition()
+              .duration(200)
+              .attr("stroke-width", isSel ? 3.5 : 2)
+              .attr("stroke", isSel ? "#fff" : n.color);
+          });
+
+          link.transition().duration(200)
+            .attr("stroke", (l) => {
+              if (l.type !== "parent") return "rgba(245, 158, 11, 0.06)";
+              if (isLineageLink(l, lineageIds)) {
+                const srcNode = typeof l.source === "object" ? (l.source as GraphNode) : nodes.find(n => n.id === l.source);
+                return srcNode?.color || "rgba(255, 255, 255, 0.8)";
+              }
+              return "rgba(255, 255, 255, 0.04)";
+            })
+            .attr("stroke-width", (l) => {
+              if (l.type !== "parent") return 0.5;
+              if (isLineageLink(l, lineageIds)) return 3;
+              return 1;
+            })
+            .attr("stroke-opacity", (l) => {
+              if (isLineageLink(l, lineageIds)) return 1;
+              return 0.35;
+            });
+        } else {
+          // Reset links
+          link
+            .transition()
+            .duration(200)
+            .attr("stroke", (l) =>
+              l.type === "parent"
+                ? "rgba(255, 255, 255, 0.12)"
+                : "rgba(245, 158, 11, 0.12)"
+            )
+            .attr("stroke-width", (l) => (l.type === "parent" ? 1.5 : 1))
+            .attr("stroke-opacity", 1);
+
+          // Reset nodes
+          node.transition().duration(200).attr("opacity", 1);
+          node.each(function (n) {
+            const dead = n.model.status === "deprecated" || n.model.status === "discontinued";
+            d3.select(this)
+              .select(".node-shape")
+              .transition()
+              .duration(200)
+              .attr("stroke-width", dead ? 1 : 2)
+              .attr("stroke", dead ? "rgba(255,255,255,0.15)" : n.color);
+          });
+        }
       });
 
     // ── Motion mode: orbital breathing ─────────────────────────────────────
@@ -868,14 +970,138 @@ export function ForceGraph2D({
       observer.disconnect();
       if (motionAnimFrame) cancelAnimationFrame(motionAnimFrame);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     familiesKey,
     searchQuery,
-    selectedModelId,
     getFilteredData,
     onSelectModel,
     motionEnabled,
+    layoutMode,
   ]);
+
+  // ── Highlight selected node & lineage without rebuilding graph ──────────
+  useEffect(() => {
+    const svgEl = svgRef.current;
+    if (!svgEl) return;
+    const svg = d3.select(svgEl);
+    const node = svg.selectAll<d3.BaseType, GraphNode>(".tree-node");
+    const link = svg.selectAll<d3.BaseType, GraphLink>(".links path");
+
+    if (!selectedModelId) {
+      // Reset styling
+      node.transition().duration(250).attr("opacity", 1);
+      node.each(function (d) {
+        const dead = d.model.status === "deprecated" || d.model.status === "discontinued";
+        d3.select(this)
+          .select(".node-shape")
+          .transition()
+          .duration(250)
+          .attr("stroke-width", dead ? 1 : 2)
+          .attr("stroke", dead ? "rgba(255,255,255,0.15)" : d.color);
+      });
+
+      link.transition().duration(250)
+        .attr("stroke", (l) =>
+          l.type === "parent"
+            ? "rgba(255, 255, 255, 0.12)"
+            : "rgba(245, 158, 11, 0.12)"
+        )
+        .attr("stroke-width", (l) => (l.type === "parent" ? 1.5 : 1))
+        .attr("stroke-opacity", 1);
+      return;
+    }
+
+    const filteredModels = getFilteredData();
+    const filteredIds = new Set(filteredModels.map((m) => m.id));
+
+    // Helper: compute full ancestor set
+    const getAncestryIds = (nodeId: string): Set<string> => {
+      const ancestry = new Set<string>();
+      const visited = new Set<string>();
+      const queue = [nodeId];
+      while (queue.length > 0) {
+        const currentId = queue.shift()!;
+        if (visited.has(currentId)) continue;
+        visited.add(currentId);
+        const model = filteredModels.find((m) => m.id === currentId);
+        if (model) {
+          for (const pid of model.parentIds) {
+            if (filteredIds.has(pid)) {
+              ancestry.add(pid);
+              queue.push(pid);
+            }
+          }
+        }
+      }
+      return ancestry;
+    };
+
+    // Helper: compute full descendant set
+    const getDescendantIds = (nodeId: string): Set<string> => {
+      const descendants = new Set<string>();
+      const visited = new Set<string>();
+      const queue = [nodeId];
+      while (queue.length > 0) {
+        const currentId = queue.shift()!;
+        if (visited.has(currentId)) continue;
+        visited.add(currentId);
+        for (const model of filteredModels) {
+          if (model.parentIds.includes(currentId) && !descendants.has(model.id)) {
+            descendants.add(model.id);
+            queue.push(model.id);
+          }
+        }
+      }
+      return descendants;
+    };
+
+    const isLineageLink = (l: GraphLink, lineageIds: Set<string>): boolean => {
+      const src = typeof l.source === "object" ? (l.source as GraphNode).id : l.source;
+      const tgt = typeof l.target === "object" ? (l.target as GraphNode).id : l.target;
+      return lineageIds.has(src as string) && lineageIds.has(tgt as string);
+    };
+
+    const ancestryIds = getAncestryIds(selectedModelId);
+    const descendantIds = getDescendantIds(selectedModelId);
+    const lineageIds = new Set([selectedModelId, ...ancestryIds, ...descendantIds]);
+
+    // Dim non-lineage nodes, keep lineage nodes bright
+    node.transition().duration(250).attr("opacity", (n) => lineageIds.has(n.id) ? 1 : 0.12);
+
+    // Highlight the selected node ring specifically
+    node.each(function (n) {
+      const isSelected = n.id === selectedModelId;
+      d3.select(this)
+        .select(".node-shape")
+        .transition()
+        .duration(250)
+        .attr("stroke-width", isSelected ? 3.5 : 2)
+        .attr("stroke", isSelected ? "#fff" : n.color);
+    });
+
+    // Highlight lineage links with glowing color trail
+    link.transition().duration(250)
+      .attr("stroke", (l) => {
+        if (l.type !== "parent") return "rgba(245, 158, 11, 0.06)";
+        if (isLineageLink(l, lineageIds)) {
+          const srcColor = typeof l.source === "object" ? (l.source as GraphNode).color : null;
+          const tgtColor = typeof l.target === "object" ? (l.target as GraphNode).color : null;
+          return srcColor || tgtColor || "#fff";
+        }
+        return "rgba(255, 255, 255, 0.04)";
+      })
+      .attr("stroke-width", (l) => {
+        if (l.type !== "parent") return 0.5;
+        if (isLineageLink(l, lineageIds)) return 3;
+        return 1;
+      })
+      .attr("stroke-opacity", (l) => {
+        if (isLineageLink(l, lineageIds)) return 1;
+        return 0.35;
+      });
+
+  }, [selectedModelId, getFilteredData]);
 
   return (
     <div ref={containerRef} className="relative w-full h-full min-h-[500px]">

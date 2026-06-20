@@ -304,7 +304,7 @@ export const papers: PaperNode[] = [
     title: "ReAct: Synergizing Reasoning and Acting in Language Models",
     shortTitle: "ReAct",
     authors: "Yao et al.",
-    year: 2023,
+    year: 2022,
     institution: "Princeton / Google",
     contribution:
       "Combined chain-of-thought reasoning with external tool use (APIs, search), improving QA and decision-making through interleaved reasoning and action.",

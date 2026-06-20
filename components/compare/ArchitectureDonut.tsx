@@ -3,7 +3,6 @@
 import { useMemo, useState, useCallback } from "react";
 import * as d3 from "d3";
 import { models } from "@/lib/data/models";
-import type { ArchitectureType } from "@/lib/types";
 import { ChartContainer, type TooltipData, ChartTooltip } from "./ChartContainer";
 
 const ARC_COLORS: Record<string, string> = {

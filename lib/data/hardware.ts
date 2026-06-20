@@ -20,7 +20,7 @@ export const hardware: HardwareNode[] = [
     },
     description:
       "NVIDIA's first Tensor Core GPU. Introduced mixed-precision training, enabling efficient large-scale model training for the Transformer era.",
-    enabledModels: ["paper-bert", "paper-gpt1"],
+    enabledModels: ["model-bert", "model-gpt1"],
     enabledBreakthroughs: "Enabled training of BERT (2018) and the first wave of Transformer-based models via mixed-precision computing.",
   },
   {
@@ -156,7 +156,7 @@ export const hardware: HardwareNode[] = [
     id: "hw-tpu-v4",
     name: "TPU v4",
     manufacturer: "google",
-    releaseDate: "2020-05",
+    releaseDate: "2021-05",
     specs: {
       compute: "275 TFLOPS bfloat16",
     },
@@ -277,7 +277,7 @@ export const hardware: HardwareNode[] = [
     id: "hw-cerebras-cs3",
     name: "CS-3",
     manufacturer: "cerebras",
-    releaseDate: "2023-03",
+    releaseDate: "2024-03",
     specs: {
       transistors: "4T",
       compute: "125 PFLOPS AI",

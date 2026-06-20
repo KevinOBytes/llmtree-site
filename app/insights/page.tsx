@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { InsightsView } from "@/components/insights/InsightsView";
+import { models } from "@/lib/data/models";
+import { papers } from "@/lib/data/papers";
+import { hardware } from "@/lib/data/hardware";
 
 export const metadata: Metadata = {
   title: "AI Insights — Trends, Patterns & Analysis | LLM Tree of Life",
@@ -50,9 +53,9 @@ export default function InsightsPage() {
             </h1>
             <p className="mt-3 text-sm sm:text-base text-text-secondary max-w-xl">
               Trends, patterns, and analysis derived from{" "}
-              <span className="text-accent-violet font-medium">178 models</span>,{" "}
-              <span className="text-accent-cyan font-medium">35 papers</span>, and{" "}
-              <span className="text-accent-emerald font-medium">24 hardware milestones</span>.
+              <span className="text-accent-violet font-medium">{models.length} models</span>,{" "}
+              <span className="text-accent-cyan font-medium">{papers.length} papers</span>, and{" "}
+              <span className="text-accent-emerald font-medium">{hardware.length} hardware milestones</span>.
             </p>
           </div>
         </div>

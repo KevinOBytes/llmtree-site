@@ -5,10 +5,29 @@ import { useState, useMemo, useCallback, Suspense } from "react";
 import dynamic from "next/dynamic";
 import { models } from "@/lib/data/models";
 import { FAMILY_COLORS, type ModelFamily, type ModelNode } from "@/lib/types";
+import { FAMILY_LABELS } from "@/lib/chartUtils";
 import { ModelDetailPanel } from "./ModelDetailPanel";
-import { ForceGraph2D } from "./ForceGraph";
 import { ViewControls } from "./ViewControls";
 import { VisualizationLegend } from "./VisualizationLegend";
+
+// Dynamic import with SSR disabled — D3 requires browser APIs and is heavy
+const ForceGraph2D = dynamic(
+  () =>
+    import("./ForceGraph").then((mod) => ({
+      default: mod.ForceGraph2D,
+    })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-full flex items-center justify-center text-text-muted">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-accent-emerald/30 border-t-accent-emerald rounded-full animate-spin" />
+          <span className="text-sm">Loading 2D engine...</span>
+        </div>
+      </div>
+    ),
+  }
+);
 
 // Dynamic import with SSR disabled — Three.js requires browser APIs
 const ForceGraph3D = dynamic(
@@ -31,43 +50,6 @@ const ForceGraph3D = dynamic(
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
-const FAMILY_LABELS: Record<string, string> = {
-  "openai-gpt": "OpenAI GPT",
-  "openai-o": "OpenAI o-series",
-  "anthropic-claude": "Anthropic Claude",
-  "google-gemini": "Google Gemini",
-  "google-palm": "Google PaLM",
-  "google-gemma": "Google Gemma",
-  "meta-llama": "Meta LLaMA",
-  mistral: "Mistral AI",
-  "xai-grok": "xAI Grok",
-  "cohere-command": "Cohere Command",
-  "microsoft-phi": "Microsoft Phi",
-  deepseek: "DeepSeek",
-  "alibaba-qwen": "Alibaba Qwen",
-  "tii-falcon": "TII Falcon",
-  "amazon-nova": "Amazon Nova",
-  "nvidia-nemotron": "NVIDIA Nemotron",
-  "ibm": "IBM",
-  "01ai-yi": "01.AI Yi",
-  "apple": "Apple",
-  "ai21-jamba": "AI21 Labs",
-  "allen-ai": "Allen AI",
-  "inflection": "Inflection AI",
-  "search-tool": "Search / RAG",
-  "music-gen": "Music Generation",
-  "speech-ai": "Speech / Voice",
-  "stability-ai": "Stability AI",
-  "midjourney": "Midjourney",
-  "image-gen": "Image Generation",
-  "coding-tool": "Coding Tools",
-  community: "Community / Uncensored",
-  foundational: "Foundational",
-  "embedding": "Embedding Models",
-  "safety": "Safety / Guardrails",
-  "robotics": "Robotics / Embodied",
-  "chinese-llm": "Chinese LLMs",
-};
 
 /** Families with models that have non-zero counts */
 const ALL_FAMILIES = (Object.keys(FAMILY_LABELS) as ModelFamily[]).filter(
@@ -122,6 +104,7 @@ function TreeViewInner() {
   const [viewMode, setViewMode] = useState<ViewMode>("graph");
   const [viewDimension, setViewDimension] = useState<"2d" | "3d">("2d");
   const [motionEnabled, setMotionEnabled] = useState(false);
+  const [layoutMode, setLayoutMode] = useState<"timeline" | "ancestry" | "network">("timeline");
 
   // ── Derived: effective families set ────────────────────────────────────
   const effectiveFamilies = useMemo(() => {
@@ -528,6 +511,8 @@ function TreeViewInner() {
               onViewDimensionChange={setViewDimension}
               motionEnabled={motionEnabled}
               onMotionEnabledChange={setMotionEnabled}
+              layoutMode={layoutMode}
+              onLayoutModeChange={setLayoutMode}
             />
           )}
         </div>
@@ -544,6 +529,7 @@ function TreeViewInner() {
                 motionEnabled={motionEnabled}
                 opennessFilter={opennessFilter}
                 modalityFilter={modalityFilter}
+                layoutMode={layoutMode}
               />
             ) : (
               <ForceGraph3D
