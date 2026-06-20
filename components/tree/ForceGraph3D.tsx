@@ -32,6 +32,7 @@ interface Graph3DNode {
   vz?: number;
   radius: number;
   color: string;
+  threeColor: THREE.Color;
   emissiveIntensity: number;
 }
 
@@ -93,6 +94,52 @@ function GraphScene({
   const lineRef = useRef<THREE.LineSegments>(null);
   const hoveredRef = useRef<string | null>(null);
 
+  // Helper: compute full ancestry set (walk parentIds to root)
+  const getAncestryIds = useCallback((nodeId: string): Set<string> => {
+    const ancestry = new Set<string>();
+    const visited = new Set<string>();
+    const queue = [nodeId];
+    while (queue.length > 0) {
+      const currentId = queue.shift()!;
+      if (visited.has(currentId)) continue;
+      visited.add(currentId);
+      const n = nodes.find((node) => node.id === currentId);
+      if (n) {
+        for (const pid of n.model.parentIds) {
+          if (nodes.some((node) => node.id === pid)) {
+            ancestry.add(pid);
+            queue.push(pid);
+          }
+        }
+      }
+    }
+    return ancestry;
+  }, [nodes]);
+
+  // Helper: compute full descendant set (walk children to leaves)
+  const getDescendantIds = useCallback((nodeId: string): Set<string> => {
+    const descendants = new Set<string>();
+    const visited = new Set<string>();
+    const queue = [nodeId];
+    while (queue.length > 0) {
+      const currentId = queue.shift()!;
+      if (visited.has(currentId)) continue;
+      visited.add(currentId);
+      for (const n of nodes) {
+        if (n.model.parentIds.includes(currentId) && !descendants.has(n.id)) {
+          descendants.add(n.id);
+          queue.push(n.id);
+        }
+      }
+    }
+    return descendants;
+  }, [nodes]);
+
+  const activeLineageRef = useRef<{
+    activeId: string | null;
+    lineageIds: Set<string>;
+  }>({ activeId: null, lineageIds: new Set() });
+
   // Build line geometry for all edges
   const lineGeometry = useMemo(() => {
     const positions = new Float32Array(links.length * 6);
@@ -107,7 +154,20 @@ function GraphScene({
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
 
-    // Update node mesh positions
+    const activeId = hoveredRef.current || selectedModelId;
+    if (activeLineageRef.current.activeId !== activeId) {
+      const lineageIds = new Set<string>();
+      if (activeId) {
+        lineageIds.add(activeId);
+        getAncestryIds(activeId).forEach((id) => lineageIds.add(id));
+        getDescendantIds(activeId).forEach((id) => lineageIds.add(id));
+      }
+      activeLineageRef.current = { activeId, lineageIds };
+    }
+    const { lineageIds } = activeLineageRef.current;
+    const hasActiveLineage = lineageIds.size > 0;
+
+    // Update node mesh positions and materials
     nodes.forEach((node, i) => {
       const mesh = meshRefs.current.get(node.id);
       if (!mesh) return;
@@ -127,23 +187,39 @@ function GraphScene({
 
       mesh.position.set(x, y, z);
 
-      // Highlight selected node
+      // Dynamic Material styling for highlighting
       const mat = mesh.material as THREE.MeshStandardMaterial;
-      if (node.id === selectedModelId) {
-        mat.emissiveIntensity = 2.5;
+      const dead = node.model.status === "deprecated" || node.model.status === "discontinued";
+
+      if (hasActiveLineage) {
+        const inLineage = lineageIds.has(node.id);
+        const isActive = node.id === activeId;
+
+        if (isActive) {
+          mat.emissiveIntensity = node.id === selectedModelId ? 2.5 : 2.0;
+          mat.opacity = 1.0;
+        } else if (inLineage) {
+          mat.emissiveIntensity = dead ? 0.6 : 1.4;
+          mat.opacity = dead ? 0.6 : 0.9;
+        } else {
+          mat.emissiveIntensity = dead ? 0.05 : 0.1;
+          mat.opacity = dead ? 0.08 : 0.12;
+        }
+      } else {
+        mat.emissiveIntensity = dead ? 0.3 : node.emissiveIntensity;
+        mat.opacity = dead ? 0.4 : 0.9;
       }
     });
 
-    // Update line positions
-    const posArray = lineGeometry.attributes.position
-      .array as Float32Array;
+    // Update line positions and colors
+    const posArray = lineGeometry.attributes.position.array as Float32Array;
     const colArray = lineGeometry.attributes.color.array as Float32Array;
 
     links.forEach((link, i) => {
       const src =
-        typeof link.source === "object" ? link.source : nodes.find((n) => n.id === link.source);
+        typeof link.source === "object" ? (link.source as Graph3DNode) : nodes.find((n) => n.id === link.source);
       const tgt =
-        typeof link.target === "object" ? link.target : nodes.find((n) => n.id === link.target);
+        typeof link.target === "object" ? (link.target as Graph3DNode) : nodes.find((n) => n.id === link.target);
       if (!src || !tgt) return;
 
       const srcMesh = meshRefs.current.get(src.id);
@@ -162,14 +238,36 @@ function GraphScene({
       posArray[i * 6 + 4] = ty;
       posArray[i * 6 + 5] = tz;
 
-      const c = link.type === "parent" ? 0.3 : 0.15;
-      const a = link.type === "influence" ? 0.6 : 1;
-      colArray[i * 6] = c * a;
-      colArray[i * 6 + 1] = c * a;
-      colArray[i * 6 + 2] = c * a;
-      colArray[i * 6 + 3] = c * a;
-      colArray[i * 6 + 4] = c * a;
-      colArray[i * 6 + 5] = c * a;
+      const isLineageLink = hasActiveLineage && link.type === "parent" && lineageIds.has(src.id) && lineageIds.has(tgt.id);
+
+      if (hasActiveLineage) {
+        if (isLineageLink) {
+          const srcColor = src.threeColor;
+          const tgtColor = tgt.threeColor;
+          colArray[i * 6] = srcColor.r;
+          colArray[i * 6 + 1] = srcColor.g;
+          colArray[i * 6 + 2] = srcColor.b;
+          colArray[i * 6 + 3] = tgtColor.r;
+          colArray[i * 6 + 4] = tgtColor.g;
+          colArray[i * 6 + 5] = tgtColor.b;
+        } else {
+          const dim = 0.02;
+          colArray[i * 6] = dim;
+          colArray[i * 6 + 1] = dim;
+          colArray[i * 6 + 2] = dim;
+          colArray[i * 6 + 3] = dim;
+          colArray[i * 6 + 4] = dim;
+          colArray[i * 6 + 5] = dim;
+        }
+      } else {
+        const c = link.type === "parent" ? 0.15 : 0.06;
+        colArray[i * 6] = c;
+        colArray[i * 6 + 1] = c;
+        colArray[i * 6 + 2] = c;
+        colArray[i * 6 + 3] = c;
+        colArray[i * 6 + 4] = c;
+        colArray[i * 6 + 5] = c;
+      }
     });
 
     lineGeometry.attributes.position.needsUpdate = true;
@@ -188,7 +286,7 @@ function GraphScene({
         <lineBasicMaterial
           vertexColors
           transparent
-          opacity={0.4}
+          opacity={0.85}
           depthWrite={false}
         />
       </lineSegments>
@@ -360,6 +458,7 @@ export function ForceGraph3D({
       const zPos = releaseDateToNormalized(model.releaseDate) * 20 - 10;
       const jitterX = getDeterministicJitter(model.id, 42) * 2;
       const jitterY = getDeterministicJitter(model.id, 99) * 2;
+      const calculatedColor = adjustColorSaturation(baseColor, saturation);
 
       return {
         id: model.id,
@@ -368,7 +467,8 @@ export function ForceGraph3D({
         y: Math.sin(familyAngle) * radius + jitterY,
         z: zPos,
         radius: contextWindowToRadius(model.contextWindow),
-        color: adjustColorSaturation(baseColor, saturation),
+        color: calculatedColor,
+        threeColor: new THREE.Color(calculatedColor),
         emissiveIntensity: dead ? 0.3 : 1.2,
       };
     });

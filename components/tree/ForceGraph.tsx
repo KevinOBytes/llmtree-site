@@ -659,12 +659,13 @@ export function ForceGraph2D({
 
       // Highlight the selected node ring
       node.each(function (d) {
-        if (d.id === selectedModelId) {
-          d3.select(this)
-            .select(".node-shape")
-            .attr("stroke-width", 3)
-            .attr("stroke", "#fff");
-        }
+        const isSel = d.id === selectedModelId;
+        const isLineage = lineageIds.has(d.id);
+        const dead = d.model.status === "deprecated" || d.model.status === "discontinued";
+        d3.select(this)
+          .select(".node-shape")
+          .attr("stroke-width", isSel ? 3.5 : isLineage ? 2.5 : (dead ? 1 : 2))
+          .attr("stroke", isSel ? "#fff" : d.color);
       });
 
       // Highlight lineage links
@@ -737,12 +738,14 @@ export function ForceGraph2D({
         node.each(function (n) {
           const isActive = n.id === d.id;
           const isSel = n.id === selectedModelId;
+          const isLineage = lineageIds.has(n.id);
+          const dead = n.model.status === "deprecated" || n.model.status === "discontinued";
           d3.select(this)
             .select(".node-shape")
             .transition()
             .duration(120)
-            .attr("stroke-width", isActive || isSel ? 3.5 : 2)
-            .attr("stroke", isActive ? "#fff" : n.color);
+            .attr("stroke-width", isActive || isSel ? 3.5 : isLineage ? 2.5 : (dead ? 1 : 2))
+            .attr("stroke", isActive ? "#fff" : (isSel ? "#fff" : n.color));
         });
 
         // Build tooltip HTML
@@ -800,11 +803,13 @@ export function ForceGraph2D({
 
           node.each(function (n) {
             const isSel = n.id === selectedModelId;
+            const isLineage = lineageIds.has(n.id);
+            const dead = n.model.status === "deprecated" || n.model.status === "discontinued";
             d3.select(this)
               .select(".node-shape")
               .transition()
               .duration(200)
-              .attr("stroke-width", isSel ? 3.5 : 2)
+              .attr("stroke-width", isSel ? 3.5 : isLineage ? 2.5 : (dead ? 1 : 2))
               .attr("stroke", isSel ? "#fff" : n.color);
           });
 
@@ -1072,11 +1077,13 @@ export function ForceGraph2D({
     // Highlight the selected node ring specifically
     node.each(function (n) {
       const isSelected = n.id === selectedModelId;
+      const isLineage = lineageIds.has(n.id);
+      const dead = n.model.status === "deprecated" || n.model.status === "discontinued";
       d3.select(this)
         .select(".node-shape")
         .transition()
         .duration(250)
-        .attr("stroke-width", isSelected ? 3.5 : 2)
+        .attr("stroke-width", isSelected ? 3.5 : isLineage ? 2.5 : (dead ? 1 : 2))
         .attr("stroke", isSelected ? "#fff" : n.color);
     });
 
