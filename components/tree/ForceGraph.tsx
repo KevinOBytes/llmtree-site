@@ -260,14 +260,24 @@ export function ForceGraph2D({
       const maxYear = 2027;
       const axisGroup = g.append("g").attr("class", "axis-labels");
 
+      // Clean vertical Y-axis line
+      axisGroup
+        .append("line")
+        .attr("x1", 80)
+        .attr("x2", 80)
+        .attr("y1", height * 0.08)
+        .attr("y2", height * 0.92)
+        .attr("stroke", "rgba(255,255,255,0.12)")
+        .attr("stroke-width", 1.5);
+
       for (let year = minYear; year <= 2026; year++) {
         const t = (year - minYear) / (maxYear - minYear);
         const yPos = height * 0.1 + t * height * 0.8;
 
-        // Subtle horizontal guide line
+        // Subtle horizontal guide line extending to the right of Y-axis
         axisGroup
           .append("line")
-          .attr("x1", 40)
+          .attr("x1", 80)
           .attr("x2", width - 20)
           .attr("y1", yPos)
           .attr("y2", yPos)
@@ -275,16 +285,16 @@ export function ForceGraph2D({
           .attr("stroke-width", 1)
           .attr("stroke-dasharray", "4 8");
 
-        // Year label
+        // Year label to the left of Y-axis
         axisGroup
           .append("text")
           .text(year.toString())
-          .attr("x", 16)
+          .attr("x", 68)
           .attr("y", yPos + 4)
-          .attr("fill", "rgba(255,255,255,0.2)")
+          .attr("fill", "rgba(255,255,255,0.25)")
           .attr("font-size", "10px")
           .attr("font-family", "var(--font-mono)")
-          .attr("text-anchor", "start");
+          .attr("text-anchor", "end");
       }
 
       // "Timeline" vertical label
@@ -319,8 +329,13 @@ export function ForceGraph2D({
     const familyGroups: Record<string, number> = {};
     const familyList = [...new Set(filteredModels.map((m) => m.family))];
     familyList.forEach((f, i) => {
-      // Spread families evenly across the width
-      familyGroups[f] = ((i + 0.5) / familyList.length) * width;
+      if (layoutMode === "timeline") {
+        // Spread families evenly within the zone to the right of the timeline Y-axis (margin 120px)
+        familyGroups[f] = 120 + ((i + 0.5) / familyList.length) * (width - 160);
+      } else {
+        // Spread families evenly across the full width
+        familyGroups[f] = ((i + 0.5) / familyList.length) * width;
+      }
     });
 
     const simulation = d3.forceSimulation<GraphNode>(nodes);
@@ -441,6 +456,8 @@ export function ForceGraph2D({
             if (!event.active) simulation.alphaTarget(0);
             d.fx = null;
             d.fy = null;
+            // Warm up the simulation on drag end so nodes snap back to force-directed positions
+            simulation.alpha(0.4).restart();
           })
       );
 
@@ -887,6 +904,14 @@ export function ForceGraph2D({
 
     // ── Tick handler ───────────────────────────────────────────────────────
     simulation.on("tick", () => {
+      // Keep nodes strictly constrained within safe bounds
+      nodes.forEach((d) => {
+        const r = d.radius || 10;
+        const minX = layoutMode === "timeline" ? 110 + r : r + 10;
+        d.x = Math.max(minX, Math.min(width - 20 - r, d.x!));
+        d.y = Math.max(40 + r, Math.min(height - 45 - r, d.y!));
+      });
+
       // Use curved paths (quadratic bezier) for cleaner link routing
       link.attr("d", (d) => {
         const sx = (d.source as GraphNode).x!;
