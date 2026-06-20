@@ -135,6 +135,115 @@ export const GLOSSARY: Record<string, string> = {
     "The maximum number of tokens a model can process in a single input. Ranges from 2K to 10M+.",
   FLOP:
     "A single floating point operation. Models are measured in total FLOPs required to train.",
+  // ── Learn Section Term Additions ──────────────────────────────────────────
+  integer:
+    "A whole number representing a token's index position inside a vocabulary table.",
+  Integer:
+    "A whole number representing a token's index position inside a vocabulary table.",
+  embedding:
+    "A high-dimensional vector representing the semantic meaning of a token, grouping similar words close together in vector space.",
+  Embedding:
+    "A high-dimensional vector representing the semantic meaning of a token, grouping similar words close together in vector space.",
+  frontier:
+    "The absolute leading edge of AI model capability, representing state-of-the-art parameters, compute, and benchmark performance.",
+  Frontier:
+    "The absolute leading edge of AI model capability, representing state-of-the-art parameters, compute, and benchmark performance.",
+  vector:
+    "A list of numerical values representing a coordinate in high-dimensional space, used to encode semantic meanings.",
+  Vector:
+    "A list of numerical values representing a coordinate in high-dimensional space, used to encode semantic meanings.",
+  query:
+    "In self-attention, the vector representing the current token seeking context from other parts of the sequence.",
+  Query:
+    "In self-attention, the vector representing the current token seeking context from other parts of the sequence.",
+  key:
+    "In self-attention, the vector representing what information a token contains, matched against queries to compute attention weights.",
+  Key:
+    "In self-attention, the vector representing what information a token contains, matched against queries to compute attention weights.",
+  context:
+    "The text or prompt preceding a generation that the model uses to understand what it is currently processing.",
+  Context:
+    "The text or prompt preceding a generation that the model uses to understand what it is currently processing.",
+  attention:
+    "A mechanism in Transformers that determines how much focus to place on other words in a sequence when processing the current word.",
+  Attention:
+    "A mechanism in Transformers that determines how much focus to place on other words in a sequence when processing the current word.",
+  heads:
+    "Independent attention mechanisms running in parallel, allowing the model to capture multiple relationships at once.",
+  Heads:
+    "Independent attention mechanisms running in parallel, allowing the model to capture multiple relationships at once.",
+  token:
+    "A basic unit of text (such as a word or subword fragment) processed by a language model.",
+  Token:
+    "A basic unit of text (such as a word or subword fragment) processed by a language model.",
+  softmax:
+    "A mathematical function that converts a vector of raw scores (logits) into a probability distribution summing to 1.",
+  Softmax:
+    "A mathematical function that converts a vector of raw scores (logits) into a probability distribution summing to 1.",
+  parameter:
+    "A variable or weight inside a neural network that is adjusted during training to store knowledge.",
+  Parameter:
+    "A variable or weight inside a neural network that is adjusted during training to store knowledge.",
+  deterministic:
+    "An execution mode or output that is completely predictable, always yielding the identical response for a given input.",
+  Deterministic:
+    "An execution mode or output that is completely predictable, always yielding the identical response for a given input.",
+  truncate:
+    "To cut off or discard the tail end of a text sequence or a probability distribution.",
+  Truncate:
+    "To cut off or discard the tail end of a text sequence or a probability distribution.",
+  temperature:
+    "A hyperparameter controlling the randomness of outputs; lower values make outputs more deterministic, higher values make them more creative.",
+  Temperature:
+    "A hyperparameter controlling the randomness of outputs; lower values make outputs more deterministic, higher values make them more creative.",
+  LLM:
+    "Large Language Model — a deep learning model trained on massive text corpora to understand and generate human language.",
+  loops:
+    "Iterative processes where a model performs actions, observes the results, and reflects on them repeatedly to solve a task.",
+  Loops:
+    "Iterative processes where a model performs actions, observes the results, and reflects on them repeatedly to solve a task.",
+  "Reason-Act-Observe":
+    "The execution cycle of an agent (often using the ReAct framework) where it reasons about a task, calls a tool, and observes the feedback.",
+  call:
+    "An invocation of a tool or function (like web search or a calculator) by the model to gather external data.",
+  Call:
+    "An invocation of a tool or function (like web search or a calculator) by the model to gather external data.",
+  external:
+    "Resources, files, or services outside of the model's static weights, such as APIs or search engines.",
+  External:
+    "Resources, files, or services outside of the model's static weights, such as APIs or search engines.",
+  "reinforcement learning":
+    "A machine learning paradigm where models learn to make decisions by performing actions and receiving rewards or penalties.",
+  "Reinforcement Learning":
+    "A machine learning paradigm where models learn to make decisions by performing actions and receiving rewards or penalties.",
+  "direct preference optimization":
+    "A stable, simple alignment method that directly trains a model on preference pairs without needing a separate reward model.",
+  "Direct Preference Optimization":
+    "A stable, simple alignment method that directly trains a model on preference pairs without needing a separate reward model.",
+  "human feedback":
+    "Evaluations, ratings, or corrections provided by humans to align model behavior with user expectations and safety guidelines.",
+  "Human Feedback":
+    "Evaluations, ratings, or corrections provided by humans to align model behavior with user expectations and safety guidelines.",
+  AI:
+    "Artificial Intelligence — the broad field of computer science focused on building systems capable of performing tasks that typically require human intelligence.",
+  prompt:
+    "The input text or instruction provided to a language model to guide its output.",
+  Prompt:
+    "The input text or instruction provided to a language model to guide its output.",
+  response:
+    "The output text generated by a language model in reply to a prompt.",
+  Response:
+    "The output text generated by a language model in reply to a prompt.",
+  "neural network":
+    "A computational model inspired by biological brains, consisting of interconnected layers of nodes (neurons) that process data.",
+  "Neural Network":
+    "A computational model inspired by biological brains, consisting of interconnected layers of nodes (neurons) that process data.",
+  "Self-Attention":
+    "An attention mechanism relating different positions of a single sequence to compute a representation of the sequence.",
+  "self-attention":
+    "An attention mechanism relating different positions of a single sequence to compute a representation of the sequence.",
+  Transformer:
+    "Neural network architecture using self-attention to process entire sequences in parallel. Replaced RNNs and enabled massive scaling.",
 };
 
 // ============================================================================

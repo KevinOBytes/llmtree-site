@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { TechTerm, AutoGlossary } from "@/components/ui/TechTerm";
 
 // ============================================================================
 // Types & Data Structures
@@ -384,8 +385,8 @@ export default function LearnPage() {
             How Large Language Models Work
           </h1>
           <p className="mt-4 text-text-secondary text-lg max-w-2xl mx-auto leading-relaxed">
-            LLMs are often referred to as black boxes. In this guide, we break down
-            the core mechanics — from tokens to self-attention, and decoding to agentic loops.
+            <TechTerm term="LLM">LLMs</TechTerm> are often referred to as black boxes. In this guide, we break down
+            the core mechanics — from <TechTerm term="Token">tokens</TechTerm> to <TechTerm term="Self-Attention">self-attention</TechTerm>, and decoding to agentic <TechTerm term="loops">loops</TechTerm>.
           </p>
         </section>
 
@@ -403,14 +404,14 @@ export default function LearnPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start mb-6">
             <div className="text-text-secondary text-sm sm:text-base leading-relaxed space-y-4">
               <p>
-                Models cannot read text directly. First, a **tokenizer** splits text into
-                subword fragments called <strong>tokens</strong>. Common prefixes or suffixes
+                Models cannot read text directly. First, a <TechTerm term="Tokenizer"><strong>tokenizer</strong></TechTerm> splits text into
+                subword fragments called <TechTerm term="Token"><strong>tokens</strong></TechTerm>. Common prefixes or suffixes
                 (like <code>##ing</code> or BPE space markers <code>Ġ</code>) are isolated
                 to allow the model to recognize grammatical roots <span className="text-text-muted">[Radford et al. 2018]</span>.
               </p>
               <p>
-                Each token is mapped to a unique integer ID. Then, a lookup table translates
-                these IDs into **embeddings**: dense vectors (often 4096+ dimensions) that position
+                Each <TechTerm term="Token">token</TechTerm> is mapped to a unique <TechTerm term="Integer">integer</TechTerm> ID. Then, a lookup table translates
+                these IDs into <TechTerm term="Embedding"><strong>embeddings</strong></TechTerm>: dense <TechTerm term="Vector">vectors</TechTerm> (often 4096+ dimensions) that position
                 words in a semantic space. In this space, words with similar meanings (like &quot;king&quot;
                 and &quot;queen&quot;) are grouped close together.
               </p>
@@ -464,14 +465,14 @@ export default function LearnPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start mb-6">
             <div className="text-text-secondary text-sm sm:text-base leading-relaxed space-y-4">
               <p>
-                The core engine of the Transformer is <strong>Self-Attention</strong> <span className="text-text-muted">[Vaswani et al. 2017]</span>.
-                In a sentence, words depend on context. For example, in &quot;The llm read the prompt because &quot;<strong>it</strong>&quot; was relevant&quot;, what does &quot;it&quot; refer to?
+                The core engine of the <TechTerm term="Transformer">Transformer</TechTerm> is <TechTerm term="Self-Attention"><strong>Self-Attention</strong></TechTerm> <span className="text-text-muted">[Vaswani et al. 2017]</span>.
+                In a sentence, words depend on <TechTerm term="Context">context</TechTerm>. For example, in &quot;The <TechTerm term="LLM">llm</TechTerm> read the <TechTerm term="Prompt">prompt</TechTerm> because &quot;<strong>it</strong>&quot; was relevant&quot;, what does &quot;it&quot; refer to?
               </p>
               <p>
-                Self-Attention calculates a set of query, key, and value vectors. The query for &quot;it&quot; is compared with keys for all other words. The model computes weights representing how much &quot;attention&quot; to pay to each word.
+                Self-Attention calculates a set of <TechTerm term="Query">query</TechTerm>, <TechTerm term="Key">key</TechTerm>, and value <TechTerm term="Vector">vectors</TechTerm>. The query for &quot;it&quot; is compared with <TechTerm term="Key">keys</TechTerm> for all other words. The model computes weights representing how much &quot;<TechTerm term="Attention">attention</TechTerm>&quot; to pay to each word.
               </p>
               <p>
-                Transformers run multiple **Attention Heads** in parallel. This allows the model to capture different relations simultaneously (e.g. tracking pronouns in one head, verbs in another).
+                <TechTerm term="Transformer">Transformers</TechTerm> run multiple <TechTerm term="Heads"><strong>Attention Heads</strong></TechTerm> in parallel. This allows the model to capture different relations simultaneously (e.g. tracking pronouns in one head, verbs in another).
               </p>
             </div>
 
@@ -608,7 +609,7 @@ export default function LearnPage() {
 
           <div className="text-text-secondary text-sm sm:text-base leading-relaxed space-y-4 mb-8">
             <p>
-              Frontier models go through three major training phases to become reliable
+              <TechTerm term="Frontier">Frontier</TechTerm> models go through three major training phases to become reliable
               and safe assistants <span className="text-text-muted">[Ouyang et al. 2022]</span>.
               Click through the phases below to see how datasets and model behaviors change.
             </p>
@@ -650,7 +651,7 @@ export default function LearnPage() {
               </span>
             </div>
             <p className="text-sm sm:text-base text-text-secondary leading-relaxed mb-6">
-              {trainSteps[activeTrainStep].description}
+              <AutoGlossary text={trainSteps[activeTrainStep].description} />
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -688,20 +689,20 @@ export default function LearnPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start mb-6">
             <div className="text-text-secondary text-sm sm:text-base leading-relaxed space-y-4">
               <p>
-                At inference, an LLM outputs logits (raw scores) for every token in its vocabulary.
-                These are turned into probabilities using <strong>Softmax</strong>. We control the
-                randomness and diversity of outputs using two parameters:
+                At <TechTerm term="Inference">inference</TechTerm>, an <TechTerm term="LLM">LLM</TechTerm> outputs logits (raw scores) for every <TechTerm term="Token">token</TechTerm> in its vocabulary.
+                These are turned into probabilities using <TechTerm term="Softmax"><strong>Softmax</strong></TechTerm>. We control the
+                randomness and diversity of outputs using two <TechTerm term="Parameter">parameters</TechTerm>:
               </p>
               <ul className="space-y-3 pl-2 text-xs sm:text-sm">
                 <li>
-                  <strong>🌡️ Temperature:</strong> Controls distribution scale. Low temperature
+                  <strong>🌡️ <TechTerm term="Temperature">Temperature</TechTerm>:</strong> Controls distribution scale. Low temperature
                   (&lt; 0.5) compresses values, sharpening the peaks so the model repeatedly picks the
-                  absolute highest score (factual/deterministic). High temperature (&gt; 1.0) flattens
+                  absolute highest score (factual/<TechTerm term="Deterministic">deterministic</TechTerm>). High temperature (&gt; 1.0) flattens
                   the curves, increasing diversity (creative/unpredictable).
                 </li>
                 <li>
-                  <strong>🎯 Top-P (Nucleus Sampling):</strong> Truncates the probability distribution
-                  to include only a subset whose cumulative sum is under $P$. Tokens in the tail whose sum exceeds
+                  <strong>🎯 Top-P (Nucleus Sampling):</strong> <TechTerm term="Truncate">Truncates</TechTerm> the probability distribution
+                  to include only a subset whose cumulative sum is under $P$. <TechTerm term="Token">Tokens</TechTerm> in the tail whose sum exceeds
                   $P$ are completely discarded.
                 </li>
               </ul>
@@ -825,8 +826,8 @@ export default function LearnPage() {
                   Retrieval-Augmented Generation (RAG)
                 </h3>
                 <p className="text-xs text-text-secondary leading-relaxed mb-4">
-                  LLMs have knowledge cutoff limits. RAG resolves this by fetching external sources
-                  dynamically from a vector store, then feeding the data to the LLM context <span className="text-text-muted">[Lewis et al. 2020]</span>.
+                  <TechTerm term="LLM">LLMs</TechTerm> have knowledge cutoff limits. <TechTerm term="RAG">RAG</TechTerm> resolves this by fetching <TechTerm term="external">external</TechTerm> sources
+                  dynamically from a <TechTerm term="vector">vector</TechTerm> store, then feeding the data to the <TechTerm term="LLM">LLM</TechTerm> <TechTerm term="Context">context</TechTerm> <span className="text-text-muted">[Lewis et al. 2020]</span>.
                 </p>
 
                 {/* Steps container */}
@@ -857,7 +858,7 @@ export default function LearnPage() {
                       </div>
                       {activeRagStep === idx && (
                         <p className="text-[11px] text-text-secondary leading-relaxed mt-1">
-                          {step.detail}
+                          <AutoGlossary text={step.detail} />
                         </p>
                       )}
                     </div>
@@ -883,7 +884,7 @@ export default function LearnPage() {
                   Autonomous Agentic Loops (ReAct)
                 </h3>
                 <p className="text-xs text-text-secondary leading-relaxed mb-4">
-                  Rather than single-step execution, agents run loops (Reason-Act-Observe). They review their thoughts and call external tools iteratively <span className="text-text-muted">[Yao et al. 2022]</span>.
+                  Rather than single-step execution, agents run <TechTerm term="loops">loops</TechTerm> (<TechTerm term="Reason-Act-Observe">Reason-Act-Observe</TechTerm>). They review their thoughts and <TechTerm term="call">call</TechTerm> <TechTerm term="external">external</TechTerm> tools iteratively <span className="text-text-muted">[Yao et al. 2022]</span>.
                 </p>
 
                 {/* Step controls */}
@@ -928,7 +929,7 @@ export default function LearnPage() {
                     {agentSteps[activeAgentStep].phase}
                   </span>
                   <p className="text-xs text-text-secondary leading-relaxed font-semibold mb-2">
-                    {agentSteps[activeAgentStep].detail}
+                    <AutoGlossary text={agentSteps[activeAgentStep].detail} />
                   </p>
                   <pre className="text-[11px] text-text-primary font-mono whitespace-pre-wrap bg-surface-secondary/40 p-2.5 rounded border border-border-default/30">
                     {agentSteps[activeAgentStep].text}
