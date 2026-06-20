@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { ComparePageClient } from "@/components/compare/ComparePageClient";
 
 export const metadata: Metadata = {
@@ -53,6 +54,17 @@ export default function ComparePage() {
               windows, diversified architectures, and accelerated their release
               cadence — all visualized from our dataset of frontier models.
             </p>
+            <div className="mt-6 flex flex-wrap gap-4 justify-center">
+              <Link
+                href="/compare/models"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent-violet hover:bg-accent-violet/90 text-white text-xs font-semibold transition-all hover:-translate-y-0.5 cursor-pointer shadow-lg shadow-accent-violet/10 hover:shadow-accent-violet/20"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                Model-to-Model Comparison Workbench
+              </Link>
+            </div>
           </div>
         </div>
       </section>

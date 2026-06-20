@@ -79,6 +79,12 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          href="/feed.xml"
+          title="LLM Tree of Life — Newly Released Models"
+        />
         {GA_MEASUREMENT_ID && (
           <>
             <script

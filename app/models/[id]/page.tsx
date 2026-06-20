@@ -148,8 +148,29 @@ export default async function ModelDetailPage({ params }: PageProps) {
 
   const status = model.status ?? "active";
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": model.name,
+    "description": model.description,
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "All",
+    "releaseDate": model.releaseDate,
+    "developer": {
+      "@type": "Organization",
+      "name": model.company,
+    },
+    ...(model.parameterCount && { "softwareVersion": model.parameterCount }),
+  };
+
   return (
     <div className="flex flex-col min-h-dvh">
+      {/* JSON-LD Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       {/* ── Background Glow ──────────────────────────────────────────────── */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
         <div
