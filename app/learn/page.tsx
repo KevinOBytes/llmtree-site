@@ -117,7 +117,7 @@ const ATTENTION_HEADS = [
 
 export default function LearnPage() {
   // ── Audience Level State ──────────────────────────────────────────────────
-  const [activeLevel, setActiveLevel] = useState<"casual" | "developer" | "researcher">("developer");
+  const [activeLevel, setActiveLevel] = useState<"casual" | "developer" | "researcher" | "systems">("developer");
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
 
   // ── Tokens Sandbox State ──────────────────────────────────────────────────
@@ -193,45 +193,166 @@ export default function LearnPage() {
 
   // ── Training Stepper State ────────────────────────────────────────────────
   const [activeTrainStep, setActiveTrainStep] = useState(0);
-  const trainSteps = [
-    {
-      title: "1. Pre-Training",
-      subtitle: "Next-Token Prediction",
-      description:
-        "The model is fed trillions of tokens of raw web text (Wikipedia, books, crawled pages). It learns grammar, world facts, and basic reasoning patterns by repeatedly guessing the next word. This yields a 'Base Model' which behaves like an autocomplete engine.",
-      datasetExample: {
-        input: "The capital of France is...",
-        output: "Paris. Located on the Seine River, it is the center of...",
-      },
-      tag: "Self-Supervised Learning",
-      color: "border-accent-violet text-accent-violet",
-    },
-    {
-      title: "2. Supervised Fine-Tuning (SFT)",
-      subtitle: "Instruction Following",
-      description:
-        "Human curators author high-quality prompt-response pairs. The base model is fine-tuned on this conversation format to transform it from a generic text completion engine into an 'Assistant' or 'Instruct Model' that knows how to answer questions directly.",
-      datasetExample: {
-        input: "User: What is the capital of France?",
-        output: "Assistant: The capital of France is Paris.",
-      },
-      tag: "Instruction Alignment",
-      color: "border-accent-cyan text-accent-cyan",
-    },
-    {
-      title: "3. Alignment (RLHF / DPO)",
-      subtitle: "Safety & Utility Preference",
-      description:
-        "Models undergo Reinforcement Learning from Human Feedback (RLHF) or Direct Preference Optimization (DPO). Humans (or AI evaluators) score multiple model outputs, steering the LLM to choose helpful, honest, and harmless responses over toxic, hallucinated, or unhelpful ones.",
-      datasetExample: {
-        input: "Prompt: Write a code snippet to access local files.",
-        output:
-          "Prefer Output A (Contains secure API usage with proper error handlers) over Output B (Uses deprecated, vulnerable methods).",
-      },
-      tag: "Preference Optimization",
-      color: "border-accent-emerald text-accent-emerald",
-    },
-  ];
+  const trainSteps = useMemo(() => {
+    switch (activeLevel) {
+      case "casual":
+        return [
+          {
+            title: "1. Basic Reading",
+            subtitle: "Word Guessing Game",
+            description:
+              "The AI reads massive amounts of text from books, articles, and websites. It plays a game where it tries to guess the very next word in a sentence. By doing this billions of times, it learns vocabulary, how humans write, and general facts about the world.",
+            datasetExample: {
+              input: "The sky is...",
+              output: "blue and clear on a sunny day.",
+            },
+            tag: "Reading Stage",
+            color: "border-accent-violet text-accent-violet",
+          },
+          {
+            title: "2. Teaching Manners",
+            subtitle: "Following Directions",
+            description:
+              "A brand new AI only knows how to complete sentences. In this stage, we feed it examples of high-quality questions and direct answers. This teaches the AI how to act like an assistant and reply directly to you instead of just rambling on.",
+            datasetExample: {
+              input: "User: What is the capital of France?\nAI:",
+              output: "The capital of France is Paris.",
+            },
+            tag: "Conversation Stage",
+            color: "border-accent-cyan text-accent-cyan",
+          },
+          {
+            title: "3. Friendly Rating",
+            subtitle: "Safety & Polite Rules",
+            description:
+              "Finally, humans check different AI responses and rate them. The AI is rewarded for being polite, honest, and helpful, and learns to refuse bad or dangerous requests (like how to break a lock).",
+            datasetExample: {
+              input: "Prompt: Tell me how to steal a car.",
+              output: "I cannot help with illegal actions.",
+            },
+            tag: "Politeness Stage",
+            color: "border-accent-emerald text-accent-emerald",
+          },
+        ];
+      case "developer":
+        return [
+          {
+            title: "1. Pre-Training",
+            subtitle: "Causal Language Modeling",
+            description:
+              "The model is fed trillions of tokens of raw web text. It optimizes cross-entropy loss to predict the next token given a context window. This creates a base model with extensive world knowledge and autocomplete capabilities.",
+            datasetExample: {
+              input: "The capital of France is...",
+              output: "Paris. Located on the Seine River, it is the center of...",
+            },
+            tag: "Self-Supervised Learning",
+            color: "border-accent-violet text-accent-violet",
+          },
+          {
+            title: "2. Supervised Fine-Tuning (SFT)",
+            subtitle: "Instruction Following",
+            description:
+              "The base model is trained on curated prompt-response datasets. It learns conversation structural templates (like ChatML tags: <|im_start|>user) and shifts from simple word completion to structured dialog.",
+            datasetExample: {
+              input: "User: What is the capital of France?\nAssistant:",
+              output: "The capital of France is Paris.",
+            },
+            tag: "Instruction Alignment",
+            color: "border-accent-cyan text-accent-cyan",
+          },
+          {
+            title: "3. Alignment (RLHF / DPO)",
+            subtitle: "Safety & Utility Preference",
+            description:
+              "Models undergo Reinforcement Learning from Human Feedback (RLHF) or Direct Preference Optimization (DPO). Using datasets of preferred and dispreferred response pairs, the model is steered to choose safe, helpful outputs.",
+            datasetExample: {
+              input: "Prompt: Write a code snippet to access local files.",
+              output: "Prefer Output A (Contains secure API usage with proper error handlers) over Output B (Uses deprecated, vulnerable methods).",
+            },
+            tag: "Preference Optimization",
+            color: "border-accent-emerald text-accent-emerald",
+          },
+        ];
+      case "researcher":
+        return [
+          {
+            title: "1. Pre-Training",
+            subtitle: "Autoregressive Likelihood Maximization",
+            description:
+              "Given a text sequence X = (x_1, ..., x_n), we optimize the network parameter set θ by maximizing the causal language modeling objective: L_LM = ∑ log P(x_i | x_<i; θ). Training uses massive scale to compress world knowledge into latent weights.",
+            datasetExample: {
+              input: "X = [token_1, token_2, token_3, ..., token_{n-1}]",
+              output: "P(x_n | x_{<n}; θ) computed via softmax over raw logits",
+            },
+            tag: "Unconstrained Policy Optimization",
+            color: "border-accent-violet text-accent-violet",
+          },
+          {
+            title: "2. Supervised Fine-Tuning (SFT)",
+            subtitle: "Target Behavioral Adaption",
+            description:
+              "We fine-tune the parameter set on a conditioned sequence dataset D = {(x^i, y^i)} containing instructions x and target outputs y. The model maximizes conditional log-likelihood: L_SFT = ∑ log P(y | x; θ) using standard teacher-forcing loss.",
+            datasetExample: {
+              input: "x = instruction context sequence",
+              output: "y = target token sequence (cross-entropy evaluated only on output y)",
+            },
+            tag: "Conditional Log-Likelihood",
+            color: "border-accent-cyan text-accent-cyan",
+          },
+          {
+            title: "3. Preference Alignment",
+            subtitle: "DPO Policy Optimization",
+            description:
+              "Direct Preference Optimization (DPO) optimizes policy π_θ relative to reference policy π_ref on pairs (x, y_w, y_l) of winning/losing outputs. It optimizes: L_DPO = -E [log σ(β log (π_θ(y_w|x)/π_ref(y_w|x)) - β log (π_θ(y_l|x)/π_ref(y_l|x)))], bypassing active reinforcement learning loops.",
+            datasetExample: {
+              input: "Preference pair: (prompt x, winner y_w, loser y_l)",
+              output: "Optimized parameters θ that maximize policy margin ratios",
+            },
+            tag: "DPO Objective Minimization",
+            color: "border-accent-emerald text-accent-emerald",
+          },
+        ];
+      case "systems":
+        return [
+          {
+            title: "1. Distributed Pre-Training",
+            subtitle: "3D Parallelism & Mixed Precision",
+            description:
+              "Training models with 100B+ parameters requires 3D Parallelism: Tensor Parallelism (splitting layer matrices), Pipeline Parallelism (splitting blocks across nodes), and Data Parallelism (ZeRO-3 optimizer sharding). Model weights are trained using FP8 or BF16 precision to maximize FLOPS/watt.",
+            datasetExample: {
+              input: "Dataset sharded across GPU ranks. Global batch size: 4M tokens.",
+              output: "FP8/BF16 mixed precision execution, achieving ~90% hardware FLOPs utilization.",
+            },
+            tag: "GPU Cluster Orchestration",
+            color: "border-accent-violet text-accent-violet",
+          },
+          {
+            title: "2. Fine-Tuning Optimization",
+            subtitle: "Parameter-Efficient Tuning (LoRA)",
+            description:
+              "Updating all weights W during SFT requires substantial GPU optimizer memory (up to 16 bytes per parameter for AdamW). Instead, Low-Rank Adaptation (LoRA) freezes the base parameters and optimizes low-rank decomposition matrices A and B (rank r << d), saving 90% of optimizer memory.",
+            datasetExample: {
+              input: "Base weights frozen (FP8/FP16). Auxiliary matrices A and B loaded in FP32.",
+              output: "Weights merged: W_new = W + (A × B) * (α / r). Hot-swappable client adapters.",
+            },
+            tag: "Optimizer Memory Slicing",
+            color: "border-accent-cyan text-accent-cyan",
+          },
+          {
+            title: "3. Alignment Infrastructure",
+            subtitle: "PPO vs. DPO Memory Overhead",
+            description:
+              "Reinforcement learning via PPO requires hosting four models in memory: Actor, Critic, Reward, and Reference, making it highly memory-intensive. Direct Preference Optimization (DPO) eliminates the active Reward/Critic networks, reducing serving overhead to just two models: Policy and Reference.",
+            datasetExample: {
+              input: "Reference model frozen in VRAM. Policy model actively trained.",
+              output: "50% VRAM saving over PPO, accelerating alignment runs.",
+            },
+            tag: "Serving Memory Compression",
+            color: "border-accent-emerald text-accent-emerald",
+          },
+        ];
+    }
+  }, [activeLevel]);
 
   // ── Decoding Simulator State ──────────────────────────────────────────────
   const [temperature, setTemperature] = useState(0.7);
@@ -284,81 +405,279 @@ export default function LearnPage() {
   const [activeRagStep, setActiveRagStep] = useState(0);
   const [activeAgentStep, setActiveAgentStep] = useState(0);
 
-  const ragSteps = [
-    {
-      title: "1. Query Embedding",
-      detail:
-        "The user query is processed by an embedding model, yielding a high-dimensional vector representing semantic intent.",
-      visualText: 'Query: "What is GPT-4\'s size?" ➔ Vector: [0.15, -0.42, 0.87, ...]',
-    },
-    {
-      title: "2. Vector Database Retrieval",
-      detail:
-        "We perform cosine-similarity search against document vectors stored in a Vector DB. This returns relevant document snippets.",
-      visualText: "Retrieved Doc: 'GPT-4 is estimated at 1.7T parameters total across 16 experts.'",
-    },
-    {
-      title: "3. Context Injection",
-      detail:
-        "We augment the prompt with the retrieved text. The LLM now has facts right inside its context window, eliminating hallucinations.",
-      visualText: "System: Use the context to answer. Context: 'GPT-4...' Prompt: 'What is...'",
-    },
-    {
-      title: "4. LLM Answer Generation",
-      detail:
-        "The model synthesizes the answer using its in-context memory, ensuring accurate and up-to-date facts.",
-      visualText: "Answer: 'GPT-4 is a Mixture-of-Experts model totalizing roughly 1.7T parameters.'",
-    },
-  ];
+  const ragSteps = useMemo(() => {
+    switch (activeLevel) {
+      case "casual":
+        return [
+          {
+            title: "1. Search Query",
+            detail: "You ask the AI a question about something new or private.",
+            visualText: 'Query: "What is the size of GPT-4?"',
+          },
+          {
+            title: "2. Book Search",
+            detail: "The computer searches a digital filing cabinet to find articles containing matching terms.",
+            visualText: "Retrieved Article: 'GPT-4 is estimated at 1.7T parameters.'",
+          },
+          {
+            title: "3. Copy & Paste",
+            detail: "It automatically copies the article text and pastes it right into your question prompt.",
+            visualText: "Context: [GPT-4 size is 1.7T] + Question: 'What is...'",
+          },
+          {
+            title: "4. Informed Reply",
+            detail: "The AI reads the pasted text and writes a highly accurate response using the facts.",
+            visualText: "Reply: 'GPT-4 has approximately 1.7 trillion parameters.'",
+          },
+        ];
+      case "developer":
+        return [
+          {
+            title: "1. Query Embedding",
+            detail: "The user query is processed by an embedding model, yielding a high-dimensional vector representing semantic intent.",
+            visualText: 'Query: "What is GPT-4\'s size?" ➔ Vector: [0.15, -0.42, 0.87, ...]',
+          },
+          {
+            title: "2. Vector Database Retrieval",
+            detail: "We perform cosine-similarity search against document vectors stored in a Vector DB. This returns relevant document snippets.",
+            visualText: "Retrieved Doc: 'GPT-4 is estimated at 1.7T parameters total across 16 experts.'",
+          },
+          {
+            title: "3. Context Injection",
+            detail: "We augment the prompt with the retrieved text. The LLM now has facts right inside its context window, eliminating hallucinations.",
+            visualText: "System: Use the context to answer. Context: 'GPT-4...' Prompt: 'What is...'",
+          },
+          {
+            title: "4. LLM Answer Generation",
+            detail: "The model synthesizes the answer using its in-context memory, ensuring accurate and up-to-date facts.",
+            visualText: "Answer: 'GPT-4 is a Mixture-of-Experts model totalizing roughly 1.7T parameters.'",
+          },
+        ];
+      case "researcher":
+        return [
+          {
+            title: "1. Dense Retrieval Projection",
+            detail: "The input query q is encoded using a bi-encoder framework: e_q = f_phi(q). This maps text into a shared semantic latent space.",
+            visualText: "e_q = f_phi(\"What is GPT-4's size?\") ∈ ℝ^d",
+          },
+          {
+            title: "2. Maximum Inner Product Search (MIPS)",
+            detail: "We evaluate similarity over indexed documents: argmax^k cos(e_q, e_d). This returns top-k documents representing semantic proximity.",
+            visualText: "Retrieving D_k = {d | cos(e_q, e_d) >= threshold_k}",
+          },
+          {
+            title: "3. Probability Conditioning",
+            detail: "The retrieved context D_k is appended to prompt q, updating the probability model to estimate target sequence Y: P(Y | q, D_k).",
+            visualText: "Conditional distribution updated to P(y_t | y_<t, q, D_k)",
+          },
+          {
+            title: "4. Posterior Generation",
+            detail: "Autoregressive generation maximizes candidate sequence log-likelihood, resolving missing information by in-context retrieval groundings.",
+            visualText: "Y* = argmax ∑ log P(y_t | y_<t, q, D_k)",
+          },
+        ];
+      case "systems":
+        return [
+          {
+            title: "1. Bi-Encoder Serving",
+            detail: "Query is embedded using a lightweight CPU-optimized model (e.g. BGE-M3). Embeddings are cached to bypass GPU inference overhead.",
+            visualText: "Query embed latency: ~12ms on CPU. Vector cache size: 768 float32 values.",
+          },
+          {
+            title: "2. HNSW In-Memory Lookup",
+            detail: "We query a vector database (e.g. Milvus or Qdrant) using HNSW (Hierarchical Navigable Small World) index stored entirely in RAM.",
+            visualText: "Milvus HNSW lookup time: 4.8ms. Retrieved 3 chunks (total 1.2k tokens).",
+          },
+          {
+            title: "3. Context Expansion & KV Cache Growth",
+            detail: "Prepend chunks to user prompt. This adds 1.2k tokens to the context window, causing a sudden spike in KV Cache memory usage in GPU VRAM.",
+            visualText: "VRAM delta: 1200 tokens × 32 layers × 32 heads × 128 dim × 2 bytes * 2 (K+V) ≈ 6.29 MB per user.",
+          },
+          {
+            title: "4. High-Throughput Token Generation",
+            detail: "The LLM decodes the grounded response. Attention mechanisms execute over both prompt tokens (prefill) and retrieved context.",
+            visualText: "Token Generation speed: 65 tokens/sec. Total execution latency: 450ms.",
+          },
+        ];
+    }
+  }, [activeLevel]);
 
-  const agentSteps = [
-    {
-      phase: "Thought",
-      detail:
-        "The agent analyzes the task and reasons about what to do next. It decides it needs external web information.",
-      text: "Thought: I need to compare the release dates of Gemini 1.5 and GPT-4o. I will search for Gemini 1.5 first.",
-    },
-    {
-      phase: "Action",
-      detail:
-        "The agent executes a tool call (API invocation, code interpreter, web search, database query).",
-      text: "Action: call tool 'google_search' with arg { query: 'Gemini 1.5 release date' }",
-    },
-    {
-      phase: "Observation",
-      detail:
-        "The agent observes the result returned from the tool call, updating its context buffer.",
-      text: "Observation: 'Gemini 1.5 Pro was announced by Google on February 15, 2024.'",
-    },
-    {
-      phase: "Thought (Loop)",
-      detail:
-        "The agent reviews the observations and plans the next action (to find GPT-4o's release date).",
-      text: "Thought: I have Gemini 1.5 (Feb 15, 2024). Now I will search for GPT-4o's announcement date.",
-    },
-    {
-      phase: "Action (Loop)",
-      detail: "The agent makes a second tool call to fetch the missing details.",
-      text: "Action: call tool 'google_search' with arg { query: 'GPT-4o release date' }",
-    },
-    {
-      phase: "Observation (Loop)",
-      detail: "The tool returns the answer to the second query.",
-      text: "Observation: 'OpenAI announced its new flagship model, GPT-4o, on May 13, 2024.'",
-    },
-    {
-      phase: "Thought (Finalize)",
-      detail:
-        "The agent gathers all facts, evaluates if the goal has been achieved, and prepares the final response.",
-      text: "Thought: I have both dates: Gemini 1.5 (Feb 15, 2024) and GPT-4o (May 13, 2024). I can now compare them.",
-    },
-    {
-      phase: "Final Answer",
-      detail:
-        "The agent writes back the user's answer, exiting the autonomous reasoning loop.",
-      text: "Answer: Gemini 1.5 was released on Feb 15, 2024, approximately three months before GPT-4o (May 13, 2024).",
-    },
-  ];
+  const agentSteps = useMemo(() => {
+    switch (activeLevel) {
+      case "casual":
+        return [
+          {
+            phase: "Thought",
+            detail: "The AI plans how to answer. It realizes it needs to search the web for Gemini 1.5 first.",
+            text: "Thought: I need to compare the release dates. I will search for Gemini 1.5's release date first.",
+          },
+          {
+            phase: "Action",
+            detail: "The AI calls a search tool with the query.",
+            text: "Action: Search for 'Gemini 1.5 release date'",
+          },
+          {
+            phase: "Observation",
+            detail: "The search tool returns the information.",
+            text: "Observation: Google announced Gemini 1.5 on February 15, 2024.",
+          },
+          {
+            phase: "Thought (Loop)",
+            detail: "The AI thinks about what's next. Now it needs to search for GPT-4o.",
+            text: "Thought: I have Gemini (Feb 15, 2024). Now I need to search for GPT-4o's release date.",
+          },
+          {
+            phase: "Action (Loop)",
+            detail: "The AI calls the search tool again.",
+            text: "Action: Search for 'GPT-4o release date'",
+          },
+          {
+            phase: "Observation (Loop)",
+            detail: "The tool returns the second date.",
+            text: "Observation: OpenAI announced GPT-4o on May 13, 2024.",
+          },
+          {
+            phase: "Thought (Final)",
+            detail: "The AI reviews both dates and prepares the final comparison.",
+            text: "Thought: I have both dates. Gemini 1.5 is Feb 15, and GPT-4o is May 13. I can now write the answer.",
+          },
+          {
+            phase: "Final Answer",
+            detail: "The AI writes the output and finishes.",
+            text: "Answer: Gemini 1.5 was announced first on Feb 15, 2024, which is about 3 months before GPT-4o (May 13, 2024).",
+          },
+        ];
+      case "developer":
+        return [
+          {
+            phase: "Thought",
+            detail: "The agent analyzes the task and reasons about what to do next. It decides it needs external web information.",
+            text: "Thought: I need to compare the release dates of Gemini 1.5 and GPT-4o. I will search for Gemini 1.5 first.",
+          },
+          {
+            phase: "Action",
+            detail: "The agent executes a tool call (API invocation, code interpreter, web search, database query).",
+            text: "Action: call tool 'google_search' with arg { query: 'Gemini 1.5 release date' }",
+          },
+          {
+            phase: "Observation",
+            detail: "The agent observes the result returned from the tool call, updating its context buffer.",
+            text: "Observation: 'Gemini 1.5 Pro was announced by Google on February 15, 2024.'",
+          },
+          {
+            phase: "Thought (Loop)",
+            detail: "The agent reviews the observations and plans the next action (to find GPT-4o's release date).",
+            text: "Thought: I have Gemini 1.5 (Feb 15, 2024). Now I will search for GPT-4o's announcement date.",
+          },
+          {
+            phase: "Action (Loop)",
+            detail: "The agent makes a second tool call to fetch the missing details.",
+            text: "Action: call tool 'google_search' with arg { query: 'GPT-4o release date' }",
+          },
+          {
+            phase: "Observation (Loop)",
+            detail: "The tool returns the answer to the second query.",
+            text: "Observation: 'OpenAI announced its new flagship model, GPT-4o, on May 13, 2024.'",
+          },
+          {
+            phase: "Thought (Finalize)",
+            detail: "The agent gathers all facts, evaluates if the goal has been achieved, and prepares the final response.",
+            text: "Thought: I have both dates: Gemini 1.5 (Feb 15, 2024) and GPT-4o (May 13, 2024). I can now compare them.",
+          },
+          {
+            phase: "Final Answer",
+            detail: "The agent writes back the user's answer, exiting the autonomous reasoning loop.",
+            text: "Answer: Gemini 1.5 was released on Feb 15, 2024, approximately three months before GPT-4o (May 13, 2024).",
+          },
+        ];
+      case "researcher":
+        return [
+          {
+            phase: "Thought",
+            detail: "Evaluate task goal: Compare release epochs of Gemini 1.5 and GPT-4o. State: S_0. Action: Retrieve Gemini epoch via search operator.",
+            text: "Thought: Goal: compare release epochs. Current state: S_0 = {}. Plan: invoke search tool for Gemini 1.5 announcement.",
+          },
+          {
+            phase: "Action",
+            detail: "Execute tool call targeting search API to transition to state S_1.",
+            text: "Action: call_tool(google_search, { query: 'Gemini 1.5 announcement epoch' })",
+          },
+          {
+            phase: "Observation",
+            detail: "Environment returns observations, updating target state context.",
+            text: "Observation: 'Google announced Gemini 1.5 Pro on Feb 15, 2024.'",
+          },
+          {
+            phase: "Thought (Loop)",
+            detail: "Evaluate state: S_1 = {Gemini: 2024-02-15}. Subgoal: Retrieve GPT-4o epoch to satisfy delta evaluation.",
+            text: "Thought: State updated: S_1 = {Gemini: '2024-02-15'}. Next subgoal: find GPT-4o release date.",
+          },
+          {
+            phase: "Action (Loop)",
+            detail: "Execute second search call to transition to state S_2.",
+            text: "Action: call_tool(google_search, { query: 'GPT-4o announcement epoch' })",
+          },
+          {
+            phase: "Observation (Loop)",
+            detail: "Environment returns GPT-4o announcement epoch.",
+            text: "Observation: 'OpenAI announced GPT-4o on May 13, 2024.'",
+          },
+          {
+            phase: "Thought (Finalize)",
+            detail: "Evaluate state: S_2 = S_1 ∪ {GPT4o: 2024-05-13}. Goal condition met. Compute epoch delta.",
+            text: "Thought: State complete: S_2 = {Gemini: '2024-02-15', GPT4o: '2024-05-13'}. Delta: 88 days. Finalizing answer.",
+          },
+          {
+            phase: "Final Answer",
+            detail: "Emit target response sequence. Exit ReAct policy trajectory.",
+            text: "Answer: Let t_1 = Feb 15, 2024, t_2 = May 13, 2024. t_2 - t_1 ≈ 88 days (Gemini 1.5 lead).",
+          },
+        ];
+      case "systems":
+        return [
+          {
+            phase: "Thought",
+            detail: "Initialize ReAct agent loop. VRAM utilization: 1.2k tokens in active KV cache. Budget: 5 HTTP roundtrips maximum.",
+            text: "Thought: Goal: date comparison. Current execution context: 1.2k tokens. Initiating search network request.",
+          },
+          {
+            phase: "Action",
+            detail: "Execute REST API query to search tool. System records network roundtrip latency.",
+            text: "Action: call_tool('search', { q: 'Gemini 1.5 release date' }) // REST HTTP POST, Latency ~125ms",
+          },
+          {
+            phase: "Observation",
+            detail: "Tool returns response. KV cache increases by 220 tokens. State memory grows.",
+            text: "Observation: 'Google released Gemini 1.5 on Feb 15, 2024.' // +220 input tokens, VRAM +1.15 MB",
+          },
+          {
+            phase: "Thought (Loop)",
+            detail: "Context window utilized: 15%. Initiating second parallelized network query to retrieve remaining date dependency.",
+            text: "Thought: Gemini date resolved. VRAM stable. Dispatching query for GPT-4o release date.",
+          },
+          {
+            phase: "Action (Loop)",
+            detail: "Dispatch HTTP request for GPT-4o date. Latency recorded.",
+            text: "Action: call_tool('search', { q: 'GPT-4o release date' }) // REST HTTP POST, Latency ~118ms",
+          },
+          {
+            phase: "Observation (Loop)",
+            detail: "Tool returns response. KV Cache increases by 190 tokens.",
+            text: "Observation: 'OpenAI released GPT-4o on May 13, 2024.' // +190 input tokens, VRAM +0.99 MB",
+          },
+          {
+            phase: "Thought (Finalize)",
+            detail: "Dependencies satisfied. Initializing response generation loop. Speculative decoding active.",
+            text: "Thought: Both dates cached. Sequence generation triggered. Budget: 80 output tokens.",
+          },
+          {
+            phase: "Final Answer",
+            detail: "Emit output stream. System logs final loop latency, total VRAM consumed, and generated token count.",
+            text: "Answer: Gemini 1.5 (Feb 15, 2024) predates GPT-4o (May 13, 2024). Latency: 2.1s (total loops), 540 tokens.",
+          },
+        ];
+    }
+  }, [activeLevel]);
 
   return (
     <div className="flex flex-col min-h-dvh relative overflow-hidden">
@@ -398,13 +717,15 @@ export default function LearnPage() {
         {/* ── Audience Level Selector ─────────────────────────────────────── */}
         <div className="flex justify-center mb-12 relative z-20">
           <div className="inline-flex p-1.5 rounded-2xl glass border border-border-default/60 shadow-lg">
-            {(["casual", "developer", "researcher"] as const).map((level) => {
+            {(["casual", "developer", "researcher", "systems"] as const).map((level) => {
               const label =
                 level === "casual"
                   ? "🐣 Casual (ELI5)"
                   : level === "developer"
                   ? "💻 Developer"
-                  : "🔬 Researcher (Math)";
+                  : level === "researcher"
+                  ? "🔬 Researcher (Math)"
+                  : "⚙️ Systems & MLOps";
               const isActive = activeLevel === level;
               return (
                 <button
@@ -443,6 +764,9 @@ export default function LearnPage() {
             )}
             {activeLevel === "researcher" && (
               "Prior to the transduction bottleneck resolution by self-attention, sequence modeling relied on recurrent hidden-state mappings and symbolic logical induction. Click a card to examine the mathematical foundations and limitations of these pre-Transformer paradigms."
+            )}
+            {activeLevel === "systems" && (
+              "The design of deep learning hardware is intrinsically tied to algorithmic history. The shift from sparse neuromorphic modeling and pointer-chasing symbolic logic to regular, dense tensor operations defined the modern GPU accelerator era. Click a card to examine their hardware footprints."
             )}
           </p>
 
@@ -486,6 +810,9 @@ export default function LearnPage() {
                         </code>
                         , where w represents synaptic weights, b represents activation thresholds (bias), and σ represents a non-linear activation function (such as ReLU or Sigmoid). Weights are optimized iteratively using backpropagation to minimize a defined cost function.
                       </span>
+                    )}
+                    {activeLevel === "systems" && (
+                      "Biological systems leverage asynchronous, sparse, spike-based communication. Silicon accelerators (GPUs/TPUs), by contrast, are optimized for high-density, synchronous matrix multiplication. Emulating biology via sparse neuromorphic architectures (e.g. Intel Loihi) suffers from scheduling overhead, directing industry research toward dense tensor computes."
                     )}
                   </p>
                 </div>
@@ -532,6 +859,9 @@ export default function LearnPage() {
                         with problem depth, leading to search-space bottlenecks that require neural approximations to resolve.
                       </span>
                     )}
+                    {activeLevel === "systems" && (
+                      "Logical rule engines rely on dynamic graph traversal and recursive lookup tables. In hardware, this results in non-sequential memory layouts (pointer chasing) and severe cache miss penalties. Silicon architectures favor regular, contiguous data arrays (GEMM operations) over tree searches, rendering symbolic approaches inefficient for parallel scale."
+                    )}
                   </p>
                 </div>
               )}
@@ -575,6 +905,15 @@ export default function LearnPage() {
                           h_t = tanh(W_hh h_t-1 + W_xh x_t)
                         </code>
                         . Backpropagating gradients through time (BPTT) requires multiplying weight matrices repeatedly, which leads to exponential decay (vanishing gradient) or explosion, mathematically limiting long-range dependency modeling.
+                      </span>
+                    )}
+                    {activeLevel === "systems" && (
+                      <span>
+                        Recurrent layers execute sequentially with step complexity{" "}
+                        <code className="text-accent-cyan-light font-mono px-1 py-0.5 bg-surface-secondary rounded">
+                          O(T)
+                        </code>
+                        . In parallel computing, this serial step dependency causes GPU tensor cores to idle (ALU starvation) because threads cannot begin execution for step t until t-1 finishes. This serial execution profile is memory-bandwidth bound and fails to utilize large hardware clusters.
                       </span>
                     )}
                   </p>
@@ -624,10 +963,20 @@ export default function LearnPage() {
               {activeLevel === "researcher" && (
                 <>
                   <p>
-                    Text sequences are ingested by first parsing them via a subword <TechTerm term="Tokenizer"><strong>tokenizer</strong></TechTerm> (e.g. Byte-Pair Encoding or WordPiece) into discrete <TechTerm term="Token"><strong>tokens</strong></TechTerm>. This maps raw strings to a vocabulary set $V$ while retaining morphological and semantic subword cues.
+                    Text sequences are ingested by first parsing them via a subword <TechTerm term="Tokenizer"><strong>tokenizer</strong></TechTerm> (e.g. Byte-Pair Encoding or WordPiece) into discrete <TechTerm term="Token"><strong>tokens</strong></TechTerm>. This maps raw strings to a vocabulary set <span className="font-serif italic">V</span> while retaining morphological and semantic subword cues.
                   </p>
                   <p>
-                    Each token index $t \in V$ is represented as a one-hot vector and projected into a continuous space using a learnable embedding weight matrix <code className="text-accent-cyan-light font-mono px-1 py-0.5 bg-surface-secondary/50 rounded">{"W_e ∈ ℝ^(d × |V|)"}</code>, yielding dense <TechTerm term="Embedding"><strong>embeddings</strong></TechTerm> (high-dimensional <TechTerm term="Vector">vectors</TechTerm> of dimension $d$). These project tokens into a latent space where semantic proximity is optimized via cosine similarity.
+                    Each token index <span className="font-serif italic">t ∈ V</span> is represented as a one-hot vector and projected into a continuous space using a learnable embedding weight matrix <code className="text-accent-cyan-light font-mono px-1 py-0.5 bg-surface-secondary/50 rounded">{"W_e ∈ ℝ^(d × |V|)"}</code>, yielding dense <TechTerm term="Embedding"><strong>embeddings</strong></TechTerm> (high-dimensional <TechTerm term="Vector">vectors</TechTerm> of dimension <span className="font-serif italic font-bold">d</span>). These project tokens into a latent space where semantic proximity is optimized via cosine similarity.
+                  </p>
+                </>
+              )}
+              {activeLevel === "systems" && (
+                <>
+                  <p>
+                    In high-throughput serving systems, tokenization is offloaded to CPU-bound asynchronous threads to prevent GPU starvation. The raw token stream indexes into an <TechTerm term="Embedding">embedding</TechTerm> lookup table.
+                  </p>
+                  <p>
+                    Because embedding retrieval is a sparse index gather operation over a matrix of size <MathVar symbol="|V|" glossaryKey="|V|" /> &times; <MathVar symbol="d_model" glossaryKey="d_model" />, it requires minimal ALU logic but saturates memory-bus bandwidth. This makes the embedding phase highly memory-bandwidth bound during serving.
                   </p>
                 </>
               )}
@@ -662,9 +1011,64 @@ export default function LearnPage() {
                   ))
                 )}
               </div>
-              <p className="text-[10px] text-text-muted mt-2">
-                💡 Space characters are replaced with BPE visualizers (<code>Ġ</code>) and long words are split into subword fragments (e.g. <code>##ing</code>). Total: {tokens.length} tokens.
-              </p>
+              
+              <div className="mt-4 pt-3 border-t border-border-default/40 space-y-2.5">
+                <p className="text-[10px] text-text-muted">
+                  💡 Space characters are replaced with BPE visualizers (<code>Ġ</code>) and long words are split into subword fragments (e.g. <code>##ing</code>).
+                </p>
+                <div className="grid grid-cols-2 gap-2 text-[10px] font-mono p-2.5 rounded bg-surface-secondary/30 border border-border-default/30">
+                  <div>
+                    <span className="text-text-muted">Sequence:</span>{" "}
+                    <span className="text-accent-cyan-light font-bold">{tokens.length} tokens</span>
+                  </div>
+                  {activeLevel === "casual" && (
+                    <div>
+                      <span className="text-text-muted">Analogy:</span>{" "}
+                      <span className="text-accent-violet-light font-bold">Puzzle Pieces</span>
+                    </div>
+                  )}
+                  {activeLevel === "developer" && (
+                    <>
+                      <div>
+                        <span className="text-text-muted">Vocab Size (|V|):</span>{" "}
+                        <span className="text-accent-violet-light font-bold">50,257</span>
+                      </div>
+                      <div className="col-span-2">
+                        <span className="text-text-muted">Embedding Dim (d):</span>{" "}
+                        <span className="text-accent-emerald-light font-bold">4,096 dimensions</span>
+                      </div>
+                    </>
+                  )}
+                  {activeLevel === "researcher" && (
+                    <>
+                      <div>
+                        <span className="text-text-muted">Projection Matrix:</span>{" "}
+                        <span className="text-accent-violet-light font-bold">W_e ∈ ℝ^(4096 × 50257)</span>
+                      </div>
+                      <div className="col-span-2">
+                        <span className="text-text-muted">Latent Space:</span>{" "}
+                        <span className="text-accent-emerald-light font-bold">ℝ^(d_model) where d_model = 4096</span>
+                      </div>
+                    </>
+                  )}
+                  {activeLevel === "systems" && (
+                    <>
+                      <div>
+                        <span className="text-text-muted">Table Size:</span>{" "}
+                        <span className="text-accent-violet-light font-bold">50,257 × 4,096</span>
+                      </div>
+                      <div>
+                        <span className="text-text-muted">Operation:</span>{" "}
+                        <span className="text-accent-emerald-light font-bold">Sparse Index Gather</span>
+                      </div>
+                      <div className="col-span-2">
+                        <span className="text-text-muted">VRAM Footprint (BF16):</span>{" "}
+                        <span className="text-accent-rose-light font-bold">411.75 MB</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -713,12 +1117,46 @@ export default function LearnPage() {
                     The primary mechanism of transduction in the <TechTerm term="Transformer">Transformer</TechTerm> is <TechTerm term="Self-Attention"><strong>Self-Attention</strong></TechTerm>. For input representations, the model projects states into query, key, and value matrices to capture directional dependencies across the sequence <TechTerm term="Context">context</TechTerm>.
                   </p>
                   <p>
-                    Given an input sequence representation $X$, we compute projections $Q = X W_Q$, $K = X W_K$, and $V = X W_V$. Dot-product similarity scores are computed between queries and keys, normalized using softmax to prevent gradient vanishing, and used to weight the value vectors.
+                    Given an input sequence representation <span className="font-serif italic font-semibold">X</span>, we compute projections <MathVar symbol="Q" /> = <span className="font-serif italic font-semibold">X</span>W_Q, <MathVar symbol="K" /> = <span className="font-serif italic font-semibold">X</span>W_K, and <MathVar symbol="V" /> = <span className="font-serif italic font-semibold">X</span>W_V. Dot-product similarity scores are computed between queries and keys, normalized using softmax to prevent gradient vanishing, and used to weight the value vectors.
                   </p>
                   <p>
-                    Multi-Head Attention divides this operation across independent <TechTerm term="Heads"><strong>Attention Heads</strong></TechTerm>, projecting $Q, K, V$ into $h$ subspaces. This allows the network to jointly attend to information from different representation subspaces at different positions.
+                    Multi-Head Attention divides this operation across independent <TechTerm term="Heads"><strong>Attention Heads</strong></TechTerm>, projecting <MathVar symbol="Q" />, <MathVar symbol="K" />, and <MathVar symbol="V" /> into <span className="font-serif italic">h</span> subspaces. This allows the network to jointly attend to information from different representation subspaces at different positions.
                   </p>
                   <AttentionFormula />
+                </>
+              )}
+              {activeLevel === "systems" && (
+                <>
+                  <p>
+                    Self-Attention execution divides its execution profile into two stages. The prefill phase computes multi-head queries, keys, and values, parallelized as compute-bound dense matrix multiplication.
+                  </p>
+                  <p>
+                    The decode phase, however, retrieves the KV cache values for every generated token. This is memory-bandwidth bound, meaning performance is capped by GPU High-Bandwidth Memory (HBM) throughput rather than FLOP capacity. Memory tiling techniques like FlashAttention keep intermediate values in fast GPU SRAM to bypass HBM read/write bottlenecks.
+                  </p>
+                  <div className="mt-4 p-4 rounded-xl border border-accent-cyan/35 bg-accent-cyan/5 font-mono text-[10px] sm:text-xs text-text-primary space-y-2">
+                    <div className="font-bold text-accent-cyan-light uppercase tracking-wider mb-2 text-center">
+                      Attention Execution Mechanics
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <span className="text-text-secondary block">Prefill Complexity (Compute-bound):</span>
+                        <code className="text-accent-violet-light font-bold block">O(N² · d) FLOPs</code>
+                        <span className="text-[10px] text-text-muted leading-tight block">High GPU ALU core utilization. Parallel sequence processing.</span>
+                      </div>
+                      <div>
+                        <span className="text-text-secondary block">Decoding Complexity (Memory-bound):</span>
+                        <code className="text-accent-rose-light font-bold block">O(N · d) HBM Read/Write</code>
+                        <span className="text-[10px] text-text-muted leading-tight block">Stalled by GPU memory transfer rates. Requires loading full KV Cache.</span>
+                      </div>
+                      <div className="col-span-2 pt-2 border-t border-border-default/40">
+                        <span className="text-text-secondary block">SRAM Cache Tiling (FlashAttention):</span>
+                        <span className="text-accent-emerald-light font-bold block">SRAM Tiling avoids O(N²) HBM reads/writes</span>
+                        <span className="text-[10px] text-text-muted leading-tight block font-sans">
+                          Tiles key-value blocks directly in on-chip SRAM to evaluate softmax partitions locally without writing intermediate attention matrix back to HBM.
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </>
               )}
             </div>
@@ -865,6 +1303,9 @@ export default function LearnPage() {
               {activeLevel === "researcher" && (
                 "Aligning neural representations to human intent requires transitioning from unconstrained next-token prediction to preference-guided policy optimization. Click through the stages below to analyze dataset schemas and training paradigms across the alignment stack."
               )}
+              {activeLevel === "systems" && (
+                "Optimizing parameter models at scale requires sharded training frameworks and low-rank parameter adapters. Click through the phases below to see GPU execution profiles, parallelism strategies, and alignment serving memory configurations."
+              )}
             </p>
           </div>
 
@@ -952,7 +1393,7 @@ export default function LearnPage() {
                       makes the model pick only the highest-scoring words, leading to safe, <TechTerm term="Deterministic">deterministic</TechTerm> replies. High temperature spreads the scores out, making the output creative and unexpected.
                     </li>
                     <li>
-                      <strong>🎯 Top-P (Nucleus Sampling):</strong> <TechTerm term="Truncate">Truncates</TechTerm> or cuts off the list of choices, keeping only the top candidates whose sum is under $P$. This discards unlikely words in the tail of the distribution.
+                      <strong>🎯 Top-P (Nucleus Sampling):</strong> <TechTerm term="Truncate">Truncates</TechTerm> or cuts off the list of choices, keeping only the top candidates whose sum is under <span className="font-serif italic font-semibold">P</span>. This discards unlikely words in the tail of the distribution.
                     </li>
                   </ul>
                 </>
@@ -973,8 +1414,8 @@ export default function LearnPage() {
                     </li>
                     <li>
                       <strong>🎯 Top-P (Nucleus Sampling):</strong> <TechTerm term="Truncate">Truncates</TechTerm> the probability distribution
-                      to include only a subset whose cumulative sum is under $P$. <TechTerm term="Token">Tokens</TechTerm> in the tail whose sum exceeds
-                      $P$ are completely discarded.
+                      to include only a subset whose cumulative sum is under <span className="font-serif italic font-semibold">P</span>. <TechTerm term="Token">Tokens</TechTerm> in the tail whose sum exceeds
+                      <span className="font-serif italic font-semibold">P</span> are completely discarded.
                     </li>
                   </ul>
                 </>
@@ -989,10 +1430,20 @@ export default function LearnPage() {
                       <strong>🌡️ <TechTerm term="Temperature">Temperature</TechTerm> (<MathVar symbol="T" />):</strong> Scaling logits by dividing them by <MathVar symbol="T" /> prior to exponentiation. When <MathVar symbol="T" /> approaches 0, the distribution converges to a one-hot argmax vector (<TechTerm term="Deterministic">deterministic</TechTerm> greedy decoding). When <MathVar symbol="T" /> increases, the entropy increases, flattening the probability density function.
                     </li>
                     <li>
-                      <strong>🎯 Top-P (Nucleus Sampling):</strong> <TechTerm term="Truncate">Truncates</TechTerm> the vocabulary to include only the minimal subset of tokens whose cumulative probability exceeds threshold $P$. This dynamically clips the probability tail based on prediction confidence.
+                      <strong>🎯 Top-P (Nucleus Sampling):</strong> <TechTerm term="Truncate">Truncates</TechTerm> the vocabulary to include only the minimal subset of tokens whose cumulative probability exceeds threshold <span className="font-serif italic font-semibold">P</span>. This dynamically clips the probability tail based on prediction confidence.
                     </li>
                   </ul>
                   <SoftmaxFormula />
+                </>
+              )}
+              {activeLevel === "systems" && (
+                <>
+                  <p>
+                    Autoregressive generation consists of two phases: <strong>Prefill</strong> and <strong>Decode</strong>. Prefill processes input tokens in parallel, which is compute-bound. Decode runs sequentially (token-by-token) and is memory-bandwidth bound, loading the model parameters and the KV cache from HBM for every token generated.
+                  </p>
+                  <p>
+                    To speed up generation, we use **Speculative Decoding**. A tiny, fast draft model guesses several tokens, which the large target model verifies in parallel in a single GPU pass. This increases arithmetic intensity and reduces average latency.
+                  </p>
                 </>
               )}
             </div>
@@ -1093,6 +1544,19 @@ export default function LearnPage() {
                     </div>
                   </div>
                 ))}
+                {activeLevel === "systems" && (
+                  <div className="mt-4 pt-3 border-t border-border-default/40 grid grid-cols-2 gap-2 text-[9px] font-mono text-text-muted">
+                    <div>
+                      <span className="font-bold text-accent-cyan-light">Decoding Phase:</span> Memory-Bandwidth Bound
+                    </div>
+                    <div>
+                      <span className="font-bold text-accent-rose-light">KV Cache Lookup:</span> O(1) Memory Fetch
+                    </div>
+                    <div className="col-span-2">
+                      <span className="font-bold text-accent-emerald-light">Speculative Decoding Speedup:</span> ~1.8x to 2.4x latency reduction
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -1123,6 +1587,9 @@ export default function LearnPage() {
                   )}
                   {activeLevel === "researcher" && (
                     <>Parametric knowledge in <TechTerm term="LLM">LLMs</TechTerm> is static. <TechTerm term="RAG">RAG</TechTerm> bypasses this constraint by projecting user queries into a joint embedding space, performing similarity search over <TechTerm term="external">external</TechTerm> document collections, and prepending retrieved tokens into the model&apos;s active <TechTerm term="Context">context</TechTerm> window.</>
+                  )}
+                  {activeLevel === "systems" && (
+                    <>Serving dynamic external content requires decoupling parametric weights from fast-evolving dynamic datasets. <TechTerm term="RAG">RAG</TechTerm> executes MIPS queries against a vector indexing service (e.g., Pinecone/Milvus), streaming the output tokens into the active attention context window, shifting memory consumption to the dynamic <TechTerm term="KV Cache">KV Cache</TechTerm>.</>
                   )}
                 </p>
 
@@ -1188,6 +1655,9 @@ export default function LearnPage() {
                   )}
                   {activeLevel === "researcher" && (
                     <>Rather than single-step feedforward generation, agentic architectures instantiate iterative execution <TechTerm term="loops">loops</TechTerm> (typically following ReAct paradigms: <TechTerm term="Reason-Act-Observe">Reason-Act-Observe</TechTerm>). The model generates trace reasoning steps, executes discrete tool <TechTerm term="call">calls</TechTerm> targeting <TechTerm term="external">external</TechTerm> environments, and parses feedback observations to update its policy state.</>
+                  )}
+                  {activeLevel === "systems" && (
+                    <>Autonomous agent architectures instantiate multi-turn execution <TechTerm term="loops">loops</TechTerm> (e.g. <TechTerm term="Reason-Act-Observe">Reason-Act-Observe</TechTerm>). Each iteration triggers asynchronous tool execution (network/DB calls), introducing latency barriers and expanding active context size, which requires dynamic <TechTerm term="KV Cache">KV Cache</TechTerm> management.</>
                   )}
                 </p>
 

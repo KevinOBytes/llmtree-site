@@ -257,6 +257,32 @@ export const GLOSSARY: Record<string, string> = {
     "Temperature — a hyperparameter dividing the logits to scale next-token selection randomness.",
   "z_i":
     "Logit — the raw, unnormalized prediction score output by the model for a specific token.",
+  HBM:
+    "High-Bandwidth Memory — high-speed memory stacked directly on the GPU chip to provide the high memory bandwidth required for LLM inference.",
+  SRAM:
+    "Static RAM — extremely fast on-chip memory situated directly beside the GPU compute cores, used to cache active matrices.",
+  "Speculative Decoding":
+    "An inference optimization technique where a fast draft model guesses future tokens, which are then verified in parallel by a larger target model.",
+  "speculative decoding":
+    "An inference optimization technique where a fast draft model guesses future tokens, which are then verified in parallel by a larger target model.",
+  FlashAttention:
+    "An IO-aware exact attention algorithm that accelerates Transformer attention by tiling calculations in GPU SRAM and minimizing high-bandwidth memory access.",
+  "prefill phase":
+    "The initial step of LLM inference where the entire prompt is processed in parallel, populating the key-value (KV) cache.",
+  "Prefill phase":
+    "The initial step of LLM inference where the entire prompt is processed in parallel, populating the key-value (KV) cache.",
+  "decode phase":
+    "The autoregressive step of LLM inference, producing one token at a time. It is highly memory-bandwidth bound.",
+  "Decode phase":
+    "The autoregressive step of LLM inference, producing one token at a time. It is highly memory-bandwidth bound.",
+  "compute-bound":
+    "A computation state where processor speed (FLOPs) is the bottleneck, typical of dense matrix multiplications in pre-training or prompt prefill.",
+  "memory-bound":
+    "A computation state where memory transfer speed (GB/s) is the bottleneck, typical of next-token generation during LLM decoding.",
+  "|V|":
+    "Vocabulary Size — the total number of unique tokens the model's tokenizer can represent (typically 32,000 to 256,000+).",
+  "d_model":
+    "Model Dimension — the hidden state representation size / embedding dimension (typically 4,096 to 12,288+).",
 };
 
 // ============================================================================
