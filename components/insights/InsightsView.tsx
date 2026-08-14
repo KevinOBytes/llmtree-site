@@ -13,6 +13,11 @@ import { AutoGlossary } from "@/components/ui/TechTerm";
 // Types
 // ============================================================================
 
+interface InsightAnalysis {
+  year: string | number;
+  text: string;
+}
+
 interface InsightSection {
   id: string;
   number: number;
@@ -20,7 +25,7 @@ interface InsightSection {
   stat: string;
   statGradient: string;
   accentColor: string;
-  analysis: string;
+  analysis: string | InsightAnalysis[];
   chart: ReactNode;
 }
 
@@ -329,10 +334,36 @@ function InsightCard({ insight, index }: { insight: InsightSection; index: numbe
         {/* Chart */}
         <div className="mb-6">{insight.chart}</div>
 
-        {/* Analysis — wrapped with AutoGlossary */}
-        <p className="text-sm sm:text-base text-text-secondary leading-relaxed">
-          <AutoGlossary text={insight.analysis} />
-        </p>
+        {/* Analysis */}
+        {typeof insight.analysis === "string" ? (
+          <p className="text-sm sm:text-base text-text-secondary leading-relaxed">
+            <AutoGlossary text={insight.analysis} />
+          </p>
+        ) : (
+          <div 
+            className="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar gap-4 pb-2 -mx-2 px-2"
+            ref={(el) => {
+              if (el && !el.dataset.scrolled) {
+                el.scrollLeft = el.scrollWidth;
+                el.dataset.scrolled = "true";
+              }
+            }}
+          >
+            {insight.analysis.map((item) => (
+              <div 
+                key={item.year} 
+                className="shrink-0 w-full sm:w-[85%] snap-center bg-surface-base/40 rounded-xl p-5 border border-border-default/50"
+              >
+                <div className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: insight.accentColor }}>
+                  Our Take ({item.year})
+                </div>
+                <p className="text-sm sm:text-base text-text-secondary leading-relaxed">
+                  <AutoGlossary text={item.text} />
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1101,8 +1132,16 @@ export function InsightsView() {
       stat: `${totalReasoning} models now claim reasoning capabilities`,
       statGradient: "linear-gradient(135deg, #f97316, #ef4444)",
       accentColor: "#f97316",
-      analysis:
-        "Reasoning has exploded from a niche capability (Chain-of-Thought prompting in 2022) to the most sought-after feature in AI. OpenAI's o1 proved that 'thinking longer' (test-time compute) could dramatically improve performance on hard problems. Now every major lab — Anthropic, Google, DeepSeek — is racing to build models that don't just pattern-match but actually reason step-by-step.",
+      analysis: [
+        {
+          year: "Early 2026",
+          text: "Reasoning has exploded from a niche capability (Chain-of-Thought prompting in 2022) to the most sought-after feature in AI. OpenAI's o1 proved that 'thinking longer' (test-time compute) could dramatically improve performance on hard problems. Now every major lab — Anthropic, Google, DeepSeek — is racing to build models that don't just pattern-match but actually reason step-by-step.",
+        },
+        {
+          year: "Late 2026",
+          text: "In late 2026, reasoning evolved into continuous self-correcting loops where models automatically backtrack and fix their own logic during inference, seen in GPT-5.6 and Claude 5 Opus. The paradigm has shifted from discrete 'thinking steps' to fluid, adaptive problem-solving that mimics human reflection.",
+        }
+      ],
       chart: (
         <MiniChart>
           {(w, h) => {
@@ -1159,8 +1198,16 @@ export function InsightsView() {
       stat: `${chinaCount} Chinese models tracked, up from 0 in 2022`,
       statGradient: "linear-gradient(135deg, #f43f5e, #e11d48, #be123c)",
       accentColor: "#f43f5e",
-      analysis:
-        "China has emerged as the world's second AI superpower. Companies like DeepSeek proved that innovative architecture (MLA, multi-head latent attention) can compete with brute-force scaling. Moonshot AI's Kimi K2 (1 trillion parameters, open-weight) and MiniMax-01 (4 million token context) show that Chinese labs are no longer following — they're leading on specific frontiers. The US-China AI race is now the defining dynamic of the industry, with implications for regulation, export controls, and the future of open research.",
+      analysis: [
+        {
+          year: "Early 2026",
+          text: "China has emerged as the world's second AI superpower. DeepSeek, Alibaba, and Baidu are rapidly closing the gap with Western frontier models. The US-China AI race is now the defining dynamic of the industry, with implications for regulation, export controls, and the future of open research.",
+        },
+        {
+          year: "Late 2026",
+          text: "Companies like DeepSeek proved that innovative architecture (MLA, multi-head latent attention) can compete with brute-force scaling. Moonshot AI's Kimi K3 (open-weight) and MiniMax show that Chinese labs are no longer just following — they're leading on specific frontiers.",
+        }
+      ],
       chart: (
         <div className="flex flex-col gap-3">
           <MiniChart height={220}>
@@ -1396,6 +1443,109 @@ export function InsightsView() {
         </div>
       ),
     },
+
+    // 11. The Era of Autonomous Agents
+    {
+      id: "agents",
+      number: 11,
+      title: "The Era of Autonomous Agents",
+      stat: `${agenticCount} models specifically designed for autonomous, long-horizon workflows`,
+      statGradient: "linear-gradient(135deg, #10b981, #3b82f6)",
+      accentColor: "#10b981",
+      analysis:
+        "The paradigm has shifted from conversational chatbots to autonomous agents capable of extended task planning. Triggered by innovations like Google DeepMind's 'Prospective Credit Assignment' and open alternatives like Nemotron Lightning, models are now increasingly designed to run continuously, correcting their own mistakes and managing multi-step workflows over hours or days.",
+      chart: (
+        <MiniChart>
+          {(w, h) => {
+            const M = { top: 16, right: 16, bottom: 28, left: 32 };
+            const iW = w - M.left - M.right;
+            const iH = h - M.top - M.bottom;
+            
+            // Calculate cumulative agentic count
+            const agenticCum: { year: number; count: number }[] = [];
+            let cumAgentic = 0;
+            YEARS.forEach((y) => {
+              const count = models.filter((m) => {
+                const my = parseDate(m.releaseDate).getFullYear();
+                return my === y && m.innovations.includes("agentic");
+              }).length;
+              cumAgentic += count;
+              agenticCum.push({ year: y, count: cumAgentic });
+            });
+            const maxVal = agenticCum[agenticCum.length - 1]?.count ?? 1;
+            const x = d3.scaleLinear().domain([2018, 2026]).range([0, iW]);
+            const y = d3.scaleLinear().domain([0, maxVal + 3]).range([iH, 0]);
+            const lineGen = d3.line<{ year: number; count: number }>().x((d) => x(d.year)).y((d) => y(d.count)).curve(d3.curveMonotoneX);
+            const areaGen = d3.area<{ year: number; count: number }>().x((d) => x(d.year)).y0(iH).y1((d) => y(d.count)).curve(d3.curveMonotoneX);
+            return (
+              <svg width={w} height={h}>
+                <defs>
+                  <linearGradient id="g-agent-area" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#10b981" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="#10b981" stopOpacity={0.02} />
+                  </linearGradient>
+                </defs>
+                <g transform={`translate(${M.left},${M.top})`}>
+                  {y.ticks(4).map((t) => (
+                    <line key={t} x1={0} x2={iW} y1={y(t)} y2={y(t)} stroke="rgba(255,255,255,0.06)" strokeDasharray="4 4" />
+                  ))}
+                  <path d={areaGen(agenticCum) ?? ""} fill="url(#g-agent-area)" />
+                  <path d={lineGen(agenticCum) ?? ""} fill="none" stroke="#10b981" strokeWidth={2.5} />
+                  {agenticCum.filter((d) => d.count > 0).map((d) => (
+                    <circle key={d.year} cx={x(d.year)} cy={y(d.count)} r={4} fill="#10b981" stroke="#0a0a0f" strokeWidth={2} />
+                  ))}
+                  <g transform={`translate(0,${iH})`}>
+                    {YEARS.map((yr) => (
+                      <text key={yr} x={x(yr)} y={16} textAnchor="middle" className="fill-text-muted text-[9px]">
+                        {String(yr).slice(2)}
+                      </text>
+                    ))}
+                  </g>
+                  {y.ticks(4).map((t) => (
+                    <text key={t} x={-6} y={y(t)} textAnchor="end" dominantBaseline="middle" className="fill-text-muted text-[9px]">
+                      {t}
+                    </text>
+                  ))}
+                </g>
+              </svg>
+            );
+          }}
+        </MiniChart>
+      ),
+    },
+
+    // 12. Hardware Specialization
+    {
+      id: "hardware",
+      number: 12,
+      title: "Hardware Specialization",
+      stat: `Scaling from chips to gigawatt racks and model-specific ASICs`,
+      statGradient: "linear-gradient(135deg, #f59e0b, #ef4444)",
+      accentColor: "#f59e0b",
+      analysis:
+        "We are witnessing the rapid diversification of AI hardware. It is no longer just about buying faster general-purpose GPUs. In late 2026, companies introduced massive rack-scale deployment solutions (AMD Helios) and hyper-specialized ASICs (Taalas) designed to embed specific model weights directly into silicon. This solves the memory-bandwidth bottleneck, enabling dense agentic workflows at scale.",
+      chart: (
+        <div className="flex justify-around items-center mt-6 p-4 glass rounded-xl">
+          <div className="text-center">
+            <div className="text-3xl mb-2">🖥️</div>
+            <div className="text-sm font-bold text-accent-cyan">General GPU</div>
+            <div className="text-[10px] text-text-muted">Flexible, High-Cost</div>
+          </div>
+          <div className="w-12 h-px bg-border-hover" />
+          <div className="text-center">
+            <div className="text-3xl mb-2">🏢</div>
+            <div className="text-sm font-bold text-accent-violet">Rack-Scale</div>
+            <div className="text-[10px] text-text-muted">Dense, Agentic Workloads</div>
+          </div>
+          <div className="w-12 h-px bg-border-hover" />
+          <div className="text-center">
+            <div className="text-3xl mb-2">🧠</div>
+            <div className="text-sm font-bold text-accent-amber">Silicon ASICs</div>
+            <div className="text-[10px] text-text-muted">Embedded Weights</div>
+          </div>
+        </div>
+      ),
+    },
   ];
 
   // ── Table of Contents ───────────────────────────────────────────────────
@@ -1441,7 +1591,7 @@ export function InsightsView() {
         <InsightCard key={insight.id} insight={insight} index={i} />
       ))}
 
-      {/* 10. What's Next — Special treatment */}
+      {/* 13. What's Next — Special treatment */}
       <WhatNextCard
         agenticCount={agenticCount}
         openPct2026={openPct2026}
@@ -1458,7 +1608,7 @@ export function InsightsView() {
 }
 
 // ============================================================================
-// "What's Next" — Special glass card (Insight #14)
+// "What's Next" — Special glass card (Insight #13)
 // ============================================================================
 
 function WhatNextCard({
@@ -1526,7 +1676,7 @@ function WhatNextCard({
 
       <div className="relative z-10 p-6 sm:p-8">
         <div className="text-[10px] uppercase tracking-widest text-text-muted font-medium mb-3">
-          Insight #14
+          Insight #13
         </div>
 
         <h2 className="text-xl sm:text-2xl font-bold text-text-primary mb-2">
