@@ -337,6 +337,40 @@ export const hardware: HardwareNode[] = [
       "Intel's latest AI accelerator with Ethernet-based scaling. Competitive with Blackwell in some benchmarks.",
     enabledBreakthroughs: "Matched Blackwell in cost-effective fine-tuning for enterprise 2025 models.",
   },
+  {
+    id: "hw-amd-mi400",
+    name: "Instinct MI400 Series",
+    manufacturer: "amd",
+    releaseDate: "2026-07",
+    specs: {
+      memory: "Next-gen HBM",
+      compute: "Frontier-class",
+    },
+    description: "AMD's latest accelerators designed for frontier AI and high-performance computing, bringing new competition to NVIDIA's high-end dominance.",
+    enabledBreakthroughs: "Advanced efficient training for new mid-tier foundation models.",
+  },
+  {
+    id: "hw-amd-helios",
+    name: "Helios Rack-scale Solution",
+    manufacturer: "amd",
+    releaseDate: "2026-07",
+    specs: {
+      compute: "Rack-scale AI",
+    },
+    description: "AMD's gigawatt-scale deployment solution tailored for massive inference operations and agentic workloads.",
+    enabledBreakthroughs: "Enabled cost-effective deployment of dense agentic workflows at scale.",
+  },
+  {
+    id: "hw-taalas-silicon",
+    name: "Taalas Inference Silicon",
+    manufacturer: "amd",
+    releaseDate: "2026-08",
+    specs: {
+      compute: "Model-specific ASIC",
+    },
+    description: "Model-specific hardware that embeds AI models directly into silicon, bypassing conventional general-purpose bottlenecks. Acquired by AMD in August 2026.",
+    enabledBreakthroughs: "Pushed inference efficiency by embedding model weights directly in hardware.",
+  },
 ];
 
 // Quick lookup map

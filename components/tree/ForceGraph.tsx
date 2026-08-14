@@ -359,12 +359,12 @@ export function ForceGraph2D({
     // Apply layout-specific forces
     if (layoutMode === "timeline") {
       simulation
-        .force("charge", d3.forceManyBody().strength(-120).distanceMax(250))
+        .force("charge", d3.forceManyBody().strength(-200).distanceMax(300))
         .force(
           "x",
           d3
             .forceX<GraphNode>((d) => familyGroups[d.model.family] ?? width / 2)
-            .strength(0.08)
+            .strength(0.15)
         )
         .force(
           "y",
@@ -378,7 +378,7 @@ export function ForceGraph2D({
                 (maxYear - minYear);
               return height * 0.08 + t * height * 0.84;
             })
-            .strength(0.6)
+            .strength(0.8)
         );
     } else if (layoutMode === "ancestry") {
       simulation
@@ -457,7 +457,7 @@ export function ForceGraph2D({
             d.fx = null;
             d.fy = null;
             // Warm up the simulation on drag end so nodes snap back to force-directed positions
-            simulation.alpha(0.4).restart();
+            simulation.alpha(1).restart();
           })
       );
 
@@ -907,9 +907,13 @@ export function ForceGraph2D({
       // Keep nodes strictly constrained within safe bounds
       nodes.forEach((d) => {
         const r = d.radius || 10;
-        const minX = layoutMode === "timeline" ? 110 + r : r + 10;
-        d.x = Math.max(minX, Math.min(width - 20 - r, d.x!));
-        d.y = Math.max(40 + r, Math.min(height - 45 - r, d.y!));
+        const minX = layoutMode === "timeline" ? 90 + r : r + 10;
+        const maxX = width - 20 - r;
+        const minY = height * 0.06 + r;
+        const maxY = height * 0.94 - r;
+        
+        d.x = Math.max(minX, Math.min(maxX, d.x!));
+        d.y = Math.max(minY, Math.min(maxY, d.y!));
       });
 
       // Use curved paths (quadratic bezier) for cleaner link routing
