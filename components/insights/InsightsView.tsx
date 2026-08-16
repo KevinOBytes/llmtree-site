@@ -1447,7 +1447,7 @@ export function InsightsView() {
     // 11. The Era of Autonomous Agents
     {
       id: "agents",
-      number: 11,
+      number: 14,
       title: "The Era of Autonomous Agents",
       stat: `${agenticCount} models specifically designed for autonomous, long-horizon workflows`,
       statGradient: "linear-gradient(135deg, #10b981, #3b82f6)",
@@ -1517,7 +1517,7 @@ export function InsightsView() {
     // 12. Hardware Specialization
     {
       id: "hardware",
-      number: 12,
+      number: 15,
       title: "Hardware Specialization",
       stat: `Scaling from chips to gigawatt racks and model-specific ASICs`,
       statGradient: "linear-gradient(135deg, #f59e0b, #ef4444)",
