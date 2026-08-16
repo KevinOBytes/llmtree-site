@@ -1591,7 +1591,7 @@ export function InsightsView() {
         <InsightCard key={insight.id} insight={insight} index={i} />
       ))}
 
-      {/* 13. What's Next — Special treatment */}
+      {/* 16. What's Next — Special treatment */}
       <WhatNextCard
         agenticCount={agenticCount}
         openPct2026={openPct2026}
@@ -1608,7 +1608,7 @@ export function InsightsView() {
 }
 
 // ============================================================================
-// "What's Next" — Special glass card (Insight #13)
+// "What's Next" — Special glass card (Insight #16)
 // ============================================================================
 
 function WhatNextCard({
@@ -1676,7 +1676,7 @@ function WhatNextCard({
 
       <div className="relative z-10 p-6 sm:p-8">
         <div className="text-[10px] uppercase tracking-widest text-text-muted font-medium mb-3">
-          Insight #13
+          Insight #16
         </div>
 
         <h2 className="text-xl sm:text-2xl font-bold text-text-primary mb-2">
