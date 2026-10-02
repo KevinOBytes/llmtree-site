@@ -28,7 +28,7 @@ function toRfc822Date(dateStr: string): string {
 }
 
 export async function GET() {
-  const baseUrl = "https://evolution.kevinbytes.com";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://llmtree.kevinbytes.com";
 
   // Sort models by releaseDate descending, get top 20
   const recentModels = [...models]

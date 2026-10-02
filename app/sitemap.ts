@@ -2,17 +2,21 @@ import { MetadataRoute } from "next";
 import { models } from "@/lib/data/models";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://evolution.kevinbytes.com";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://llmtree.kevinbytes.com";
 
   // Static routes
   const staticRoutes = [
     { url: "", priority: 1.0, changeFrequency: "weekly" as const },
     { url: "/tree", priority: 0.9, changeFrequency: "weekly" as const },
+    { url: "/learn", priority: 0.9, changeFrequency: "weekly" as const },
     { url: "/compare", priority: 0.8, changeFrequency: "weekly" as const },
+    { url: "/compare/models", priority: 0.8, changeFrequency: "weekly" as const },
     { url: "/insights", priority: 0.8, changeFrequency: "weekly" as const },
     { url: "/models", priority: 0.8, changeFrequency: "weekly" as const },
     { url: "/papers", priority: 0.8, changeFrequency: "weekly" as const },
     { url: "/timeline", priority: 0.8, changeFrequency: "weekly" as const },
+    { url: "/wizard", priority: 0.8, changeFrequency: "weekly" as const },
+    { url: "/methodology", priority: 0.7, changeFrequency: "monthly" as const },
   ].map((route) => ({
     url: `${baseUrl}${route.url}`,
     lastModified: new Date(),

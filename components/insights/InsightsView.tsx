@@ -15,6 +15,7 @@ import { AutoGlossary } from "@/components/ui/TechTerm";
 
 interface InsightAnalysis {
   year: string | number;
+  stat?: string;
   text: string;
 }
 
@@ -351,11 +352,18 @@ function InsightCard({ insight, index }: { insight: InsightSection; index: numbe
           >
             {insight.analysis.map((item) => (
               <div 
-                key={item.year} 
+                key={String(item.year)} 
                 className="shrink-0 w-full sm:w-[85%] snap-center bg-surface-base/40 rounded-xl p-5 border border-border-default/50"
               >
-                <div className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: insight.accentColor }}>
-                  Our Take ({item.year})
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <div className="text-xs font-bold uppercase tracking-wider" style={{ color: insight.accentColor }}>
+                    Our Take ({item.year})
+                  </div>
+                  {item.stat && (
+                    <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-surface-elevated text-text-secondary border border-border-default shrink-0">
+                      {item.stat}
+                    </span>
+                  )}
                 </div>
                 <p className="text-sm sm:text-base text-text-secondary leading-relaxed">
                   <AutoGlossary text={item.text} />
@@ -1135,12 +1143,19 @@ export function InsightsView() {
       analysis: [
         {
           year: "Early 2026",
+          stat: "36 models",
           text: "Reasoning has exploded from a niche capability (Chain-of-Thought prompting in 2022) to the most sought-after feature in AI. OpenAI's o1 proved that 'thinking longer' (test-time compute) could dramatically improve performance on hard problems. Now every major lab — Anthropic, Google, DeepSeek — is racing to build models that don't just pattern-match but actually reason step-by-step.",
         },
         {
-          year: "Late 2026",
-          text: "In late 2026, reasoning evolved into continuous self-correcting loops where models automatically backtrack and fix their own logic during inference, seen in GPT-5.6 and Claude 5 Opus. The paradigm has shifted from discrete 'thinking steps' to fluid, adaptive problem-solving that mimics human reflection.",
-        }
+          year: "Mid 2026",
+          stat: "48 models",
+          text: "In mid 2026, reasoning evolved into continuous self-correcting loops where models automatically backtrack and fix their own logic during inference, seen in GPT-5.6 and Claude 5 Opus. The paradigm has shifted from discrete 'thinking steps' to fluid, adaptive problem-solving that mimics human reflection.",
+        },
+        {
+          year: "Fall 2026",
+          stat: `${totalReasoning} models`,
+          text: "By late September 2026, reasoning crossed an inflection point with GPT-6 Astra, Claude Mythos 5.1, and Claude Opus 5.5. The frontier is now proactive credit assignment, automated formal verification, and dealing with 'behavioral shadows' (arXiv:2609.29233)—where intense post-training RLVR transfers reasoning reflexes and policy biases into completely unrelated decision domains.",
+        },
       ],
       chart: (
         <MiniChart>
@@ -1201,12 +1216,19 @@ export function InsightsView() {
       analysis: [
         {
           year: "Early 2026",
+          stat: "28 models",
           text: "China has emerged as the world's second AI superpower. DeepSeek, Alibaba, and Baidu are rapidly closing the gap with Western frontier models. The US-China AI race is now the defining dynamic of the industry, with implications for regulation, export controls, and the future of open research.",
         },
         {
-          year: "Late 2026",
+          year: "Mid 2026",
+          stat: "38 models",
           text: "Companies like DeepSeek proved that innovative architecture (MLA, multi-head latent attention) can compete with brute-force scaling. Moonshot AI's Kimi K3 (open-weight) and MiniMax show that Chinese labs are no longer just following — they're leading on specific frontiers.",
-        }
+        },
+        {
+          year: "Fall 2026",
+          stat: `${chinaCount} models`,
+          text: "In September 2026, Chinese AI labs demonstrated unprecedented architectural efficiency: DeepSeek's V4.1-Flash achieved a 4x reduction in KV-cache memory overhead, ByteDance scaled Seed 2.1 Turbo for ultra-low-latency enterprise inference, Zhipu expanded the GLM-5.3 series, and Xiaomi's MiMo-V2.6 pioneered edge-to-cloud multimodal IoT orchestration.",
+        },
       ],
       chart: (
         <div className="flex flex-col gap-3">
@@ -1346,8 +1368,18 @@ export function InsightsView() {
       stat: `${safetyFamilyCount} dedicated safety models + ${rlhfCount} RLHF-aligned models`,
       statGradient: "linear-gradient(135deg, #ef4444, #f97316, #f59e0b)",
       accentColor: "#ef4444",
-      analysis:
-        "Safety went from an academic afterthought to an industry imperative. The RLHF paper (2017) took 5 years to become standard practice. Constitutional AI gave Anthropic a principled framework for self-improvement. But the real shift came when Meta released Llama Guard — a dedicated safety classifier that any developer could use. Google followed with ShieldGemma. Meanwhile, the open-source community pushed back with 'abliteration' techniques, raising fundamental questions: who decides what's safe, and should guardrails be removable?",
+      analysis: [
+        {
+          year: "Early 2026",
+          stat: "Alignment & Guardrails",
+          text: "Safety went from an academic afterthought to an industry imperative. The RLHF paper (2017) took 5 years to become standard practice. Constitutional AI gave Anthropic a principled framework for self-improvement. Meta's Llama Guard and Google's ShieldGemma created accessible safety classifiers, while open-source abliteration challenged whether guardrails should be removable.",
+        },
+        {
+          year: "Fall 2026",
+          stat: "Critical-Cyber Safeguards",
+          text: "With the September 2026 releases of GPT-6 Astra and Gemini 3.8 Flash Cyber, models for the first time crossed official 'critical-cyber' capability thresholds. Frontier labs now mandate gated defender programs and runtime policy enforcement frameworks (like the NVIDIA Open Agent Safety Platform), treating autonomous multi-agent systems as critical infrastructure with tangible systemic risk.",
+        },
+      ],
       chart: (
         <MiniChart height={180}>
           {(w, h) => {
@@ -1444,7 +1476,7 @@ export function InsightsView() {
       ),
     },
 
-    // 11. The Era of Autonomous Agents
+    // 14. The Era of Autonomous Agents
     {
       id: "agents",
       number: 14,
@@ -1452,8 +1484,18 @@ export function InsightsView() {
       stat: `${agenticCount} models specifically designed for autonomous, long-horizon workflows`,
       statGradient: "linear-gradient(135deg, #10b981, #3b82f6)",
       accentColor: "#10b981",
-      analysis:
-        "The paradigm has shifted from conversational chatbots to autonomous agents capable of extended task planning. Triggered by innovations like Google DeepMind's 'Prospective Credit Assignment' and open alternatives like Nemotron Lightning, models are now increasingly designed to run continuously, correcting their own mistakes and managing multi-step workflows over hours or days.",
+      analysis: [
+        {
+          year: "Mid 2026",
+          stat: "14 models",
+          text: "The paradigm has shifted from conversational chatbots to autonomous agents capable of extended task planning. Triggered by innovations like Google DeepMind's 'Prospective Credit Assignment' and open alternatives like Nemotron Lightning, models are now increasingly designed to run continuously, correcting their own mistakes and managing multi-step workflows over hours or days.",
+        },
+        {
+          year: "Fall 2026",
+          stat: `${agenticCount} models`,
+          text: "By October 2026, autonomous systems operate as multi-agent swarms. Models like Grok 4.6 run parallel agent sub-routines, while Context Language Models (CLMs, arXiv:2609.37725) treat live context as an editable persistent workspace. Agent development has shifted from simple prompting loops to robust long-horizon execution platforms with formal tool verification and critical-cyber guardrails.",
+        },
+      ],
       chart: (
         <MiniChart>
           {(w, h) => {
@@ -1514,7 +1556,7 @@ export function InsightsView() {
       ),
     },
 
-    // 12. Hardware Specialization
+    // 15. Hardware Specialization
     {
       id: "hardware",
       number: 15,
@@ -1522,8 +1564,18 @@ export function InsightsView() {
       stat: `Scaling from chips to gigawatt racks and model-specific ASICs`,
       statGradient: "linear-gradient(135deg, #f59e0b, #ef4444)",
       accentColor: "#f59e0b",
-      analysis:
-        "We are witnessing the rapid diversification of AI hardware. It is no longer just about buying faster general-purpose GPUs. In late 2026, companies introduced massive rack-scale deployment solutions (AMD Helios) and hyper-specialized ASICs (Taalas) designed to embed specific model weights directly into silicon. This solves the memory-bandwidth bottleneck, enabling dense agentic workflows at scale.",
+      analysis: [
+        {
+          year: "Mid 2026",
+          stat: "Gigawatt Racks & ASICs",
+          text: "We are witnessing the rapid diversification of AI hardware. It is no longer just about buying faster general-purpose GPUs. In mid 2026, companies introduced massive rack-scale deployment solutions (AMD Helios) and hyper-specialized ASICs (Taalas) designed to embed specific model weights directly into silicon. This solves the memory-bandwidth bottleneck, enabling dense agentic workflows at scale.",
+        },
+        {
+          year: "Fall 2026",
+          stat: "Vera Rubin & Wafer-Scale",
+          text: "In September 2026, hardware scaling branched into two dominant trajectories: NVIDIA began volume shipping of the Vera Rubin (NV-VR200) platform with 288GB HBM4 to power massive multi-trillion MoE clusters like GPT-6, while Cerebras launched CS-4 Nexus, delivering up to 30x faster inference token generation to eliminate latency bottlenecks in agentic thinking loops.",
+        },
+      ],
       chart: (
         <div className="flex justify-around items-center mt-6 p-4 glass rounded-xl">
           <div className="text-center">
