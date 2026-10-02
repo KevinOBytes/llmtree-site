@@ -371,6 +371,35 @@ export const hardware: HardwareNode[] = [
     description: "Model-specific hardware that embeds AI models directly into silicon, bypassing conventional general-purpose bottlenecks. Acquired by AMD in August 2026.",
     enabledBreakthroughs: "Pushed inference efficiency by embedding model weights directly in hardware.",
   },
+  {
+    id: "hw-cerebras-cs4",
+    name: "Cerebras CS-4 (Nexus)",
+    manufacturer: "cerebras",
+    releaseDate: "2026-08",
+    specs: {
+      memory: "Wafer-scale on-chip SRAM",
+      compute: "Nexus Rack-scale Cluster",
+      transistors: "4.8 Trillion",
+      process: "3nm",
+    },
+    description: "Cerebras's fourth-generation wafer-scale engine deployed in the Nexus rack-scale platform. Delivers up to 30x faster inference token generation for low-latency agentic loops.",
+    enabledBreakthroughs: "Unleashed ultra-high-speed interactive reasoning and multi-agent coordination without GPU inter-node latency.",
+    enabledModels: ["model-gpt6-luna", "model-gemini-3.8-flash"],
+  },
+  {
+    id: "hw-nvidia-vera-rubin",
+    name: "NVIDIA Vera Rubin (NV-VR200)",
+    manufacturer: "nvidia",
+    releaseDate: "2026-09",
+    specs: {
+      memory: "288 GB HBM4",
+      compute: "50 PFLOPS FP4 Tensor Core",
+      process: "3nm",
+    },
+    description: "NVIDIA's Vera Rubin architecture, designed to deliver unprecedented compute density and power efficiency per gigawatt datacenter footprint.",
+    enabledBreakthroughs: "Massive scale-out training and low-overhead inference for multi-trillion parameter MoE systems like GPT-6 and Claude Opus 5.5.",
+    enabledModels: ["model-gpt6-astra", "model-claude-opus-5.5"],
+  },
 ];
 
 // Quick lookup map

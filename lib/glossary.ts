@@ -283,6 +283,24 @@ export const GLOSSARY: Record<string, string> = {
     "Vocabulary Size — the total number of unique tokens the model's tokenizer can represent (typically 32,000 to 256,000+).",
   "d_model":
     "Model Dimension — the hidden state representation size / embedding dimension (typically 4,096 to 12,288+).",
+  "Context Language Model":
+    "An architecture where the model treats its active context window as an editable persistent workspace file, dynamically reading and rewriting memory across multi-day tasks.",
+  "CLM":
+    "Context Language Model — treating active context as an editable persistent file for long-horizon task execution.",
+  "Active Taskless Distillation":
+    "A phenomenon where post-training updates inadvertently transfer capabilities and behavioral biases to unrelated task domains without target-task examples.",
+  "ATD":
+    "Active Taskless Distillation — transfer of behavioral traits across unrelated tasks via post-training.",
+  "Behavioral Shadows":
+    "Persistent, unintended behavioral patterns and reasoning tendencies imprinted on a model during intense reinforcement learning post-training.",
+  "Critical-Cyber":
+    "A frontier risk classification tier triggered by models demonstrating automated vulnerability discovery, binary analysis, and exploit synthesis.",
+  "Wafer-Scale Engine":
+    "A processor etched across an entire silicon wafer rather than cut into individual chips, providing massive on-chip SRAM bandwidth and near-zero inter-core latency (e.g., Cerebras CS-4).",
+  "Vera Rubin":
+    "NVIDIA's next-generation GPU architecture featuring HBM4 memory and extreme compute density per gigawatt of datacenter infrastructure.",
+  "Proactive Credit Assignment":
+    "An advanced reinforcement learning technique where models anticipate future reward bottlenecks during long-horizon planning and assign credit across branching actions.",
 };
 
 // ============================================================================
