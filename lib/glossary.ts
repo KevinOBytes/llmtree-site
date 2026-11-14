@@ -301,6 +301,14 @@ export const GLOSSARY: Record<string, string> = {
     "NVIDIA's next-generation GPU architecture featuring HBM4 memory and extreme compute density per gigawatt of datacenter infrastructure.",
   "Proactive Credit Assignment":
     "An advanced reinforcement learning technique where models anticipate future reward bottlenecks during long-horizon planning and assign credit across branching actions.",
+  "Adaptive Thinking":
+    "Dynamic inference allocation where a reasoning model assesses problem hardness on the fly and adjusts its test-time compute budget without fixed token limits.",
+  "WikiTrace":
+    "An evidence-linked agent memory architecture that anchors every distilled insight directly to raw execution trajectories to prevent memory degradation.",
+  "Evidence-Linked Memory":
+    "Memory systems for autonomous agents where abstracted rules maintain explicit pointers back to original source code and execution logs.",
+  "Confidential Computing":
+    "Hardware-enforced enclave protection (e.g., AMD SEV-SNP on Google TPU pods) isolating sensitive training and inference data from cloud operators.",
 };
 
 // ============================================================================

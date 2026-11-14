@@ -1153,8 +1153,13 @@ export function InsightsView() {
         },
         {
           year: "Fall 2026",
-          stat: `${totalReasoning} models`,
+          stat: "56 models",
           text: "By late September 2026, reasoning crossed an inflection point with GPT-6 Astra, Claude Mythos 5.1, and Claude Opus 5.5. The frontier is now proactive credit assignment, automated formal verification, and dealing with 'behavioral shadows' (arXiv:2609.29233)—where intense post-training RLVR transfers reasoning reflexes and policy biases into completely unrelated decision domains.",
+        },
+        {
+          year: "Late 2026",
+          stat: `${totalReasoning} models`,
+          text: "In November 2026, reasoning advanced to physical-energy analogies and adaptive early stopping. Classical Energies Reasoning (arXiv:2611.17309) proved Hamiltonian trajectory selection accelerates search 1,000x faster, while early stopping (arXiv:2611.00166) slashes test-time compute waste by 40%. Models like GPT-6.1 Terra and Claude Mythos 5.2 dynamically allocate thinking budgets, self-verifying solutions against formal constraints before emission.",
         },
       ],
       chart: (
@@ -1226,8 +1231,13 @@ export function InsightsView() {
         },
         {
           year: "Fall 2026",
-          stat: `${chinaCount} models`,
+          stat: "42 models",
           text: "In September 2026, Chinese AI labs demonstrated unprecedented architectural efficiency: DeepSeek's V4.1-Flash achieved a 4x reduction in KV-cache memory overhead, ByteDance scaled Seed 2.1 Turbo for ultra-low-latency enterprise inference, Zhipu expanded the GLM-5.3 series, and Xiaomi's MiMo-V2.6 pioneered edge-to-cloud multimodal IoT orchestration.",
+        },
+        {
+          year: "Late 2026",
+          stat: `${chinaCount} models`,
+          text: "In November 2026, Chinese labs broadened leadership in open weights and spatial intelligence: Moonshot AI released Kimi K3.1 Pro with a 256K native thinking window and speculative multi-stream decoding, while Alibaba unveiled Muse Wonder and Muse Ember, pushing 3D spatial diffusion into robotics and immersive simulations.",
         },
       ],
       chart: (
@@ -1310,8 +1320,23 @@ export function InsightsView() {
       stat: `${totalEfficiency} models use efficiency innovations (distillation, MoE, parameter sharing)`,
       statGradient: "linear-gradient(135deg, #10b981, #059669, #047857)",
       accentColor: "#10b981",
-      analysis:
-        "The AI industry hit a wall: training ever-larger models became prohibitively expensive. The response was an efficiency revolution. DistilBERT showed you could compress BERT to 60% of its size while keeping 97% of its capability. ALBERT proved parameter sharing could slash model size 18×. Mixture-of-Experts architectures (Mixtral, DeepSeek-V2) activate only a fraction of parameters per query. LoRA made fine-tuning accessible on consumer GPUs. The Chinchilla paper proved most models were undertrained relative to their size. The new mantra: smaller, smarter, cheaper.",
+      analysis: [
+        {
+          year: "2018-2024",
+          stat: "Foundational Tricks",
+          text: "The AI industry encountered diminishing returns from brute-force dense scaling. DistilBERT demonstrated BERT could be compressed to 60% size while retaining 97% capability. ALBERT proved parameter sharing slashed footprint 18×. Early Mixture-of-Experts (Mixtral 8x7B) proved selective activation delivers frontier results at fractional FLOPs.",
+        },
+        {
+          year: "2025-2026",
+          stat: "Architectural MoE & MLA",
+          text: "MoE and Multi-Head Latent Attention (MLA) transitioned from experimental techniques to industry standards. DeepSeek-V3 and Qwen architectures demonstrated that activating fewer than 15% of total parameters during inference outcompetes dense models costing an order of magnitude more to run.",
+        },
+        {
+          year: "Late 2026",
+          stat: `${totalEfficiency} models`,
+          text: "By late 2026, efficiency spans hybrid linear-attention models (LFM3-8B), sparse-activation routing (Gemini 4 Carbon), and confidence-calibrated early stopping (arXiv:2611.00166). Frontier inference no longer burns peak compute unconditionally; compute scales dynamically with query difficulty.",
+        },
+      ],
       chart: (
         <MiniChart>
           {(w, h) => {
@@ -1378,6 +1403,11 @@ export function InsightsView() {
           year: "Fall 2026",
           stat: "Critical-Cyber Safeguards",
           text: "With the September 2026 releases of GPT-6 Astra and Gemini 3.8 Flash Cyber, models for the first time crossed official 'critical-cyber' capability thresholds. Frontier labs now mandate gated defender programs and runtime policy enforcement frameworks (like the NVIDIA Open Agent Safety Platform), treating autonomous multi-agent systems as critical infrastructure with tangible systemic risk.",
+        },
+        {
+          year: "Late 2026",
+          stat: "Hardware & Enclaves",
+          text: "By November 2026, safety shifted from software prompt shields to hardware-enforced isolation. With models like GPT-6 Cyber and enterprise deployments on Google TPU v8tx, confidential computing enclaves cryptographically protect model weights and execution memory against side-channel extraction and unauthorized tampering during multi-agent orchestration.",
         },
       ],
       chart: (
@@ -1492,8 +1522,13 @@ export function InsightsView() {
         },
         {
           year: "Fall 2026",
-          stat: `${agenticCount} models`,
+          stat: "22 models",
           text: "By October 2026, autonomous systems operate as multi-agent swarms. Models like Grok 4.6 run parallel agent sub-routines, while Context Language Models (CLMs, arXiv:2609.37725) treat live context as an editable persistent workspace. Agent development has shifted from simple prompting loops to robust long-horizon execution platforms with formal tool verification and critical-cyber guardrails.",
+        },
+        {
+          year: "Late 2026",
+          stat: `${agenticCount} models`,
+          text: "In November 2026, autonomous systems gained verifiable evidence linking via WikiTrace (arXiv:2611.14320), grounding multi-day agent memory graphs and eliminating hallucinated context decay. Models like Claude Fable 5.2 and Gemini 4 Argon operate as distributed swarms with cryptographic provenance and multi-step rollback guarantees.",
         },
       ],
       chart: (
@@ -1574,6 +1609,11 @@ export function InsightsView() {
           year: "Fall 2026",
           stat: "Vera Rubin & Wafer-Scale",
           text: "In September 2026, hardware scaling branched into two dominant trajectories: NVIDIA began volume shipping of the Vera Rubin (NV-VR200) platform with 288GB HBM4 to power massive multi-trillion MoE clusters like GPT-6, while Cerebras launched CS-4 Nexus, delivering up to 30x faster inference token generation to eliminate latency bottlenecks in agentic thinking loops.",
+        },
+        {
+          year: "Late 2026",
+          stat: "MI455X & TPU v8tx",
+          text: "By late 2026, AMD deployed the Instinct MI455X & Helios NVL-scale racks with 288GB HBM3e and 3.2 Tbps optical interconnects, challenging NVIDIA Vera Rubin NVL72 and Blackwell Ultra B300. Concurrently, Google TPU v8tx introduced native confidential computing accelerators, anchoring AI cluster security and weight privacy directly into silicon.",
         },
       ],
       chart: (

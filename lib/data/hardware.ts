@@ -400,6 +400,48 @@ export const hardware: HardwareNode[] = [
     enabledBreakthroughs: "Massive scale-out training and low-overhead inference for multi-trillion parameter MoE systems like GPT-6 and Claude Opus 5.5.",
     enabledModels: ["model-gpt6-astra", "model-claude-opus-5.5"],
   },
+  {
+    id: "hw-amd-mi455x-helios",
+    name: "AMD Instinct MI455X & Helios Racks",
+    manufacturer: "amd",
+    releaseDate: "2026-10",
+    specs: {
+      memory: "288GB HBM3e",
+      compute: "Frontier Rack-Scale Cluster",
+      process: "3nm",
+    },
+    description: "AMD's flagship rack-scale system paired with MI455X accelerators, achieving unprecedented inference throughput for DeepSeek-style sparse MoE models.",
+    enabledBreakthroughs: "Lowered multi-trillion parameter MoE token serving costs by 40% across hyperscale clusters.",
+    enabledModels: ["model-deepseek-v4.1-flash", "model-gpt6.1-terra"],
+  },
+  {
+    id: "hw-nvidia-blackwell-ultra-b300",
+    name: "NVIDIA Blackwell Ultra B300 / Vera Rubin NVL72",
+    manufacturer: "nvidia",
+    releaseDate: "2026-10",
+    specs: {
+      memory: "288GB HBM3e / HBM4",
+      compute: "144 PFLOPS FP4 Rack NVL72",
+      process: "3nm",
+    },
+    description: "Mass-production rollout of Blackwell Ultra and OCP-standardized Vera Rubin NVL72 liquid-cooled racks with integrated Cluster Readiness Engine.",
+    enabledBreakthroughs: "Standardized gigawatt-scale datacenter AI factories with unified liquid cooling and optical interconnects.",
+    enabledModels: ["model-gpt6-cyber", "model-gemini-4-argon", "model-claude-mythos-5.2"],
+  },
+  {
+    id: "hw-google-tpu-v8tx",
+    name: "Google TPU v8tx (Confidential Computing)",
+    manufacturer: "google",
+    releaseDate: "2026-10",
+    specs: {
+      memory: "192GB HBM3",
+      compute: "Confidential Enclave Optical Pod",
+      process: "3nm",
+    },
+    description: "Google's 8th-generation TPU pod powered by 5th Gen AMD EPYC host processors, introducing the industry's first hardware-enforced confidential computing for enterprise AI models.",
+    enabledBreakthroughs: "Hardware-isolated training and inference for regulated healthcare, defense, and sovereign AI workloads.",
+    enabledModels: ["model-gemini-4-argon", "model-gemini-4-carbon"],
+  },
 ];
 
 // Quick lookup map

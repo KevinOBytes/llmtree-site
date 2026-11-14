@@ -42,6 +42,7 @@ interface ForceGraph2DProps {
   opennessFilter?: string;
   modalityFilter?: string;
   layoutMode?: "timeline" | "ancestry" | "network";
+  modelsOverride?: ModelNode[];
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -55,6 +56,7 @@ export function ForceGraph2D({
   opennessFilter = "all",
   modalityFilter = "all",
   layoutMode = "timeline",
+  modelsOverride,
 }: ForceGraph2DProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -67,6 +69,7 @@ export function ForceGraph2D({
 
   // Filter data
   const getFilteredData = useCallback(() => {
+    if (modelsOverride) return modelsOverride;
     let filtered = models;
     if (selectedFamilies.size > 0) {
       filtered = filtered.filter((m) => selectedFamilies.has(m.family));
@@ -90,7 +93,7 @@ export function ForceGraph2D({
     }
     return filtered;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [familiesKey, searchQuery, opennessFilter, modalityFilter]);
+  }, [modelsOverride, familiesKey, searchQuery, opennessFilter, modalityFilter]);
 
   // Build and render the graph
   useEffect(() => {
@@ -121,18 +124,60 @@ export function ForceGraph2D({
       };
     });
 
-    // Build links
+    // Build links with ancestor fallback to bridge gaps when intermediate nodes are filtered
+    const modelsByIdMap = new Map(models.map((m) => [m.id, m]));
     const links: GraphLink[] = [];
+    const addedLinkKeys = new Set<string>();
+
     for (const model of filteredModels) {
+      let hasDirectParent = false;
       for (const parentId of model.parentIds) {
         if (filteredIds.has(parentId)) {
-          links.push({ source: parentId, target: model.id, type: "parent" });
+          const key = `${parentId}->${model.id}`;
+          if (!addedLinkKeys.has(key)) {
+            links.push({ source: parentId, target: model.id, type: "parent" });
+            addedLinkKeys.add(key);
+            hasDirectParent = true;
+          }
         }
       }
+
+      // If direct parents are not in the filtered set, connect to nearest visible ancestors
+      if (!hasDirectParent && model.parentIds.length > 0) {
+        const queue: { id: string; depth: number }[] = model.parentIds.map((pid) => ({ id: pid, depth: 1 }));
+        const visited = new Set<string>(model.parentIds);
+        while (queue.length > 0) {
+          const item = queue.shift()!;
+          if (filteredIds.has(item.id)) {
+            const key = `${item.id}->${model.id}`;
+            if (!addedLinkKeys.has(key)) {
+              links.push({ source: item.id, target: model.id, type: "parent" });
+              addedLinkKeys.add(key);
+            }
+            continue;
+          }
+          if (item.depth < 5) {
+            const ancestorModel = modelsByIdMap.get(item.id);
+            if (ancestorModel) {
+              for (const pid of ancestorModel.parentIds) {
+                if (!visited.has(pid)) {
+                  visited.add(pid);
+                  queue.push({ id: pid, depth: item.depth + 1 });
+                }
+              }
+            }
+          }
+        }
+      }
+
       if (model.influenceIds) {
         for (const infId of model.influenceIds) {
           if (filteredIds.has(infId)) {
-            links.push({ source: infId, target: model.id, type: "influence" });
+            const key = `inf:${infId}->${model.id}`;
+            if (!addedLinkKeys.has(key)) {
+              links.push({ source: infId, target: model.id, type: "influence" });
+              addedLinkKeys.add(key);
+            }
           }
         }
       }

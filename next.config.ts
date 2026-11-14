@@ -1,3 +1,4 @@
+import path from "path";
 import type { NextConfig } from "next";
 
 // Extra dev origins (e.g. a LAN IP for testing from another device) come from
@@ -10,6 +11,9 @@ const extraDevOrigins = (process.env.ALLOWED_DEV_ORIGINS ?? "")
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["localhost", ...extraDevOrigins],
+  turbopack: {
+    root: path.resolve(__dirname),
+  },
 };
 
 export default nextConfig;
