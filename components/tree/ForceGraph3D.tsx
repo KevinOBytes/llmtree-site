@@ -456,10 +456,10 @@ export function ForceGraph3D({
       const familyAngle = (familyIndex / familyKeys.length) * Math.PI * 2;
       const modelsInFamily = familyGroups[model.family];
       const indexInFamily = modelsInFamily.indexOf(model);
-      const spreadInFamily = indexInFamily * 1.5;
+      const spreadInFamily = indexInFamily * 2.2;
 
-      const radius = 5 + spreadInFamily * 0.8;
-      const zPos = releaseDateToNormalized(model.releaseDate) * 20 - 10;
+      const radius = 8 + spreadInFamily * 0.9;
+      const zPos = releaseDateToNormalized(model.releaseDate) * 36 - 18;
       const jitterX = getDeterministicJitter(model.id, 42) * 2;
       const jitterY = getDeterministicJitter(model.id, 99) * 2;
       const calculatedColor = adjustColorSaturation(baseColor, saturation);

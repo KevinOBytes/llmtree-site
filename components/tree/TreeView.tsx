@@ -1027,87 +1027,89 @@ function TreeViewInner() {
           )}
         </div>
 
+        {/* ── Filter Toolbar (Dedicated row above canvas, preventing any overlap) ── */}
+        {viewMode === "graph" && (
+          <div className="px-4 sm:px-6 py-2 border-b border-border-default/60 bg-surface-primary/40 backdrop-blur-md flex items-center justify-between gap-3 flex-wrap flex-shrink-0 z-10">
+            <div className="flex items-center gap-2 overflow-x-auto py-0.5 max-w-full">
+              {/* Tier Switch */}
+              <div className="flex rounded-xl bg-surface-tertiary p-0.5 border border-border-default/50 text-xs shrink-0">
+                <button
+                  onClick={() => setTierFilter("all")}
+                  className={`px-2 py-1 rounded-lg font-medium transition-all ${
+                    tierFilter === "all"
+                      ? "bg-accent-violet text-white shadow-sm"
+                      : "text-text-muted hover:text-text-primary"
+                  }`}
+                >
+                  All ({models.length})
+                </button>
+                <button
+                  onClick={() => setTierFilter("frontier")}
+                  className={`px-2 py-1 rounded-lg font-medium transition-all flex items-center gap-1 ${
+                    tierFilter === "frontier"
+                      ? "bg-accent-amber text-slate-950 font-bold shadow-sm"
+                      : "text-text-muted hover:text-text-primary"
+                  }`}
+                >
+                  <span>⭐</span> Frontier ({frontierCount})
+                </button>
+                <button
+                  onClick={() => setTierFilter("non-frontier")}
+                  className={`px-2 py-1 rounded-lg font-medium transition-all flex items-center gap-1 ${
+                    tierFilter === "non-frontier"
+                      ? "bg-accent-cyan text-slate-950 font-bold shadow-sm"
+                      : "text-text-muted hover:text-text-primary"
+                  }`}
+                >
+                  <span>🌐</span> Non-Frontier ({nonFrontierCount})
+                </button>
+              </div>
+
+              <div className="w-px h-4 bg-border-default shrink-0" />
+
+              {/* Quick Feature Chips */}
+              <div className="flex items-center gap-1 shrink-0">
+                {FEATURE_OPTIONS.map((f) => {
+                  const isActive = selectedFeatures.has(f.id);
+                  return (
+                    <button
+                      key={f.id}
+                      onClick={() => toggleFeature(f.id)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all flex items-center gap-1 shrink-0 ${
+                        isActive
+                          ? "bg-surface-elevated border border-border-hover shadow-sm"
+                          : "text-text-muted hover:text-text-secondary hover:bg-surface-tertiary/60"
+                      }`}
+                      style={{
+                        borderColor: isActive ? f.color : undefined,
+                        color: isActive ? f.color : undefined,
+                      }}
+                    >
+                      <span>{f.icon}</span>
+                      <span>{f.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {isAnyFilterActive && (
+                <>
+                  <div className="w-px h-4 bg-border-default shrink-0" />
+                  <button
+                    onClick={resetAllFilters}
+                    className="text-xs text-accent-rose hover:underline font-semibold shrink-0 flex items-center gap-1 px-1.5 py-0.5"
+                  >
+                    <span>✕</span> Reset ({filteredModels.length})
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Content area */}
         {viewMode === "graph" ? (
           <div className="flex-1 overflow-hidden relative">
-            {/* Quick Floating Bar on Graph Canvas for Instant Filtering */}
-            <div className="absolute top-3 left-3 right-3 z-20 pointer-events-none flex items-center justify-between gap-2 flex-wrap">
-              <div className="pointer-events-auto flex items-center gap-2 bg-surface-primary/85 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-border-default/70 shadow-lg overflow-x-auto max-w-full">
-                {/* Tier Switch */}
-                <div className="flex rounded-xl bg-surface-tertiary p-0.5 border border-border-default/50 text-xs shrink-0">
-                  <button
-                    onClick={() => setTierFilter("all")}
-                    className={`px-2 py-1 rounded-lg font-medium transition-all ${
-                      tierFilter === "all"
-                        ? "bg-accent-violet text-white shadow-sm"
-                        : "text-text-muted hover:text-text-primary"
-                    }`}
-                  >
-                    All ({models.length})
-                  </button>
-                  <button
-                    onClick={() => setTierFilter("frontier")}
-                    className={`px-2 py-1 rounded-lg font-medium transition-all flex items-center gap-1 ${
-                      tierFilter === "frontier"
-                        ? "bg-accent-amber text-slate-950 font-bold shadow-sm"
-                        : "text-text-muted hover:text-text-primary"
-                    }`}
-                  >
-                    <span>⭐</span> Frontier ({frontierCount})
-                  </button>
-                  <button
-                    onClick={() => setTierFilter("non-frontier")}
-                    className={`px-2 py-1 rounded-lg font-medium transition-all flex items-center gap-1 ${
-                      tierFilter === "non-frontier"
-                        ? "bg-accent-cyan text-slate-950 font-bold shadow-sm"
-                        : "text-text-muted hover:text-text-primary"
-                    }`}
-                  >
-                    <span>🌐</span> Non-Frontier ({nonFrontierCount})
-                  </button>
-                </div>
-
-                <div className="w-px h-4 bg-border-default shrink-0" />
-
-                {/* Quick Feature Chips */}
-                <div className="flex items-center gap-1 shrink-0">
-                  {FEATURE_OPTIONS.slice(0, 5).map((f) => {
-                    const isActive = selectedFeatures.has(f.id);
-                    return (
-                      <button
-                        key={f.id}
-                        onClick={() => toggleFeature(f.id)}
-                        className={`px-2 py-0.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1 shrink-0 ${
-                          isActive
-                            ? "bg-surface-elevated border border-border-hover shadow-sm"
-                            : "text-text-muted hover:text-text-secondary hover:bg-surface-tertiary/60"
-                        }`}
-                        style={{
-                          borderColor: isActive ? f.color : undefined,
-                          color: isActive ? f.color : undefined,
-                        }}
-                      >
-                        <span>{f.icon}</span>
-                        <span>{f.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {isAnyFilterActive && (
-                  <>
-                    <div className="w-px h-4 bg-border-default shrink-0" />
-                    <button
-                      onClick={resetAllFilters}
-                      className="text-xs text-accent-rose hover:underline font-semibold shrink-0 flex items-center gap-1 px-1 py-0.5"
-                    >
-                      <span>✕</span> Reset ({filteredModels.length})
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-
             {viewDimension === "2d" ? (
               <ForceGraph2D
                 selectedFamilies={selectedFamilies}

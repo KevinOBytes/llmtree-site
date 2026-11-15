@@ -83,7 +83,7 @@ const FAMILY_GROUPS: {
 export function VisualizationLegend({
   viewDimension,
 }: VisualizationLegendProps) {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
 
   return (
     <div
@@ -91,7 +91,7 @@ export function VisualizationLegend({
       role="complementary"
       aria-label="Visualization legend"
     >
-      <div className="glass rounded-xl overflow-hidden">
+      <div className="glass rounded-xl overflow-hidden shadow-xl border border-border-default/70 backdrop-blur-md">
         {/* ── Header / toggle ──────────────────────────────────────────── */}
         <button
           type="button"
@@ -156,7 +156,7 @@ export function VisualizationLegend({
           `}
         >
           <div className="overflow-hidden">
-            <div className="px-3 pb-3 space-y-3 stagger max-h-[60vh] overflow-y-auto scrollbar-thin">
+            <div className="px-3 pb-3 space-y-3 stagger max-h-[46vh] overflow-y-auto scrollbar-thin">
               {/* ── 1. Color → Family (grouped, multi-column) ──────────── */}
               <LegendSection title="Color → Family">
                 <div className="space-y-1.5">
