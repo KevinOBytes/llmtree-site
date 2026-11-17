@@ -46,6 +46,51 @@ interface ForceGraph2DProps {
   modelsOverride?: ModelNode[];
 }
 
+// ─── Constants ───────────────────────────────────────────────────────────────
+
+const PREFERRED_FAMILY_ORDER: string[] = [
+  // Frontier / Tier-1 Labs
+  "openai-gpt",
+  "openai-o",
+  "anthropic-claude",
+  "google-gemini",
+  "google-gemma",
+  "google-palm",
+  "meta-llama",
+  "mistral",
+  "deepseek",
+  "xai-grok",
+  "alibaba-qwen",
+  "microsoft-phi",
+  // Enterprise & Cloud
+  "amazon-nova",
+  "nvidia-nemotron",
+  "cohere-command",
+  "tii-falcon",
+  "ibm",
+  // Open / Global / Labs
+  "chinese-llm",
+  "01ai-yi",
+  "allen-ai",
+  "community",
+  "foundational",
+  // Multimodal & Creative
+  "image-gen",
+  "stability-ai",
+  "midjourney",
+  "music-gen",
+  "speech-ai",
+  // Specialized & Emerging
+  "coding-tool",
+  "search-tool",
+  "embedding",
+  "safety",
+  "robotics",
+  "apple",
+  "ai21-jamba",
+  "inflection",
+];
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function ForceGraph2D({
@@ -66,6 +111,15 @@ export function ForceGraph2D({
   );
   const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
   const fitViewRef = useRef<((animated?: boolean) => void) | null>(null);
+
+  // Stable refs for callbacks and active selection
+  const onSelectModelRef = useRef(onSelectModel);
+  const selectedModelIdRef = useRef(selectedModelId);
+
+  useEffect(() => {
+    onSelectModelRef.current = onSelectModel;
+    selectedModelIdRef.current = selectedModelId;
+  }, [onSelectModel, selectedModelId]);
 
   const handleZoomIn = useCallback(() => {
     if (!svgRef.current || !zoomRef.current) return;
@@ -325,20 +379,51 @@ export function ForceGraph2D({
     const maxRank = Math.max(...Object.values(ranks), 1);
 
     // ── Virtual World Dimensions (Expansive space to eliminate crowding) ──
-    const familyList = [...new Set(filteredModels.map((m) => m.family))];
-    const familyCount = Math.max(familyList.length, 1);
+    // Sort families logically so related families and major providers are clustered
+    const rawFamilies = [...new Set(filteredModels.map((m) => m.family))];
+    const familyList = rawFamilies.sort((a, b) => {
+      const idxA = PREFERRED_FAMILY_ORDER.indexOf(a);
+      const idxB = PREFERRED_FAMILY_ORDER.indexOf(b);
+      const orderA = idxA === -1 ? 999 : idxA;
+      const orderB = idxB === -1 ? 999 : idxB;
+      return orderA - orderB;
+    });
+
+    // Count models per family to allocate column space proportionally
+    const familyCounts: Record<string, number> = {};
+    filteredModels.forEach((m) => {
+      familyCounts[m.family] = (familyCounts[m.family] || 0) + 1;
+    });
+
+    const getColWidth = (fam: string): number => {
+      const count = familyCounts[fam] || 1;
+      if (count >= 20) return 220; // High volume (OpenAI, Gemini, Community)
+      if (count >= 10) return 175; // Medium-high (Claude, LLaMA, Chinese LLM)
+      if (count >= 5) return 135;  // Medium (DeepSeek, Mistral, Qwen, Phi)
+      return 95;                   // Low volume (1-4 models)
+    };
+
+    // Pre-calculate family column centers with proportional widths
+    const familyGroups: Record<string, number> = {};
+    let totalTimelineWidth = 180;
+    if (layoutMode === "timeline") {
+      familyList.forEach((f) => {
+        const colW = getColWidth(f);
+        familyGroups[f] = totalTimelineWidth + colW / 2;
+        totalTimelineWidth += colW;
+      });
+      totalTimelineWidth += 120; // Right margin
+    }
 
     let worldWidth = width;
     let worldHeight = height;
 
     if (layoutMode === "timeline") {
-      // 145px minimum per family column + margins for plenty of breathing room
-      worldWidth = Math.max(width * 1.6, familyCount * 145 + 320, 2800);
-      // 360px vertical space per year (2018 to 2027 = 9 years)
+      worldWidth = Math.max(totalTimelineWidth, width * 1.5, 2200);
       worldHeight = Math.max(height * 2.2, 9 * 360 + 320, 3400);
     } else if (layoutMode === "ancestry") {
-      worldWidth = Math.max(width * 1.8, (maxRank + 1) * 240 + 360, 3200);
-      worldHeight = Math.max(height * 2.0, 2800);
+      worldWidth = Math.max(width * 1.8, (maxRank + 1) * 240 + 360, 3000);
+      worldHeight = Math.max(height * 2.0, 2600);
     } else {
       // Network freeform mode
       const rad = Math.max(Math.sqrt(nodes.length) * 110, 1300);
@@ -346,21 +431,14 @@ export function ForceGraph2D({
       worldHeight = rad * 2 + 400;
     }
 
-    // Pre-calculate family column centers
-    const familyGroups: Record<string, number> = {};
-    if (layoutMode === "timeline") {
-      const colWidth = (worldWidth - 320) / familyCount;
-      familyList.forEach((f, i) => {
-        familyGroups[f] = 180 + i * colWidth + colWidth / 2;
-      });
-    } else {
-      const colWidth = worldWidth / familyCount;
+    if (layoutMode !== "timeline") {
+      const colWidth = worldWidth / Math.max(familyList.length, 1);
       familyList.forEach((f, i) => {
         familyGroups[f] = i * colWidth + colWidth / 2;
       });
     }
 
-    // Pre-position nodes to spread them out immediately before simulation starts
+    // Pre-position nodes with horizontal fan-out in their respective column
     nodes.forEach((n, idx) => {
       if (layoutMode === "timeline") {
         const date = new Date(n.model.releaseDate);
@@ -370,10 +448,12 @@ export function ForceGraph2D({
         const t = (yearFraction - minYear) / (maxYear - minYear);
         const targetY = 160 + t * (worldHeight - 320);
         const targetX = familyGroups[n.model.family] ?? worldWidth / 2;
+        const colW = getColWidth(n.model.family);
+        const horizontalSpread = Math.min(colW * 0.35, 40);
         const angle = (idx * 1.37) % (Math.PI * 2);
-        const dist = 18 + ((idx % 4) * 14);
+        const dist = 10 + ((idx % 3) * (horizontalSpread / 2));
         n.x = targetX + Math.cos(angle) * dist;
-        n.y = targetY + Math.sin(angle) * dist;
+        n.y = targetY + Math.sin(angle) * 8;
       } else if (layoutMode === "ancestry") {
         const r = ranks[n.id] ?? 0;
         n.x = 180 + (r / maxRank) * (worldWidth - 360);
@@ -768,80 +848,17 @@ export function ForceGraph2D({
       return lineageIds.has(src as string) && lineageIds.has(tgt as string);
     }
 
-    node
-      .on("click", (_event, d) => {
-        onSelectModel(d.model);
+    // Deselect when clicking SVG canvas background
+    svg.on("click", (event) => {
+      if (event.target === svgEl || (event.target as Element).tagName === "svg") {
+        onSelectModelRef.current(null);
+      }
+    });
 
-        // Build full lineage set (self + ancestors + descendants)
-        const ancestryIds = getAncestryIds(d.id);
-        const descendantIds = getDescendantIds(d.id);
-        const lineageIds = new Set([d.id, ...ancestryIds, ...descendantIds]);
-
-        // Highlight lineage links with a glowing trail
-        link
-          .transition()
-          .duration(300)
-          .attr("stroke", (l) => {
-            if (l.type !== "parent") return "rgba(245, 158, 11, 0.06)";
-            if (isLineageLink(l, lineageIds)) return d.color;
-            return "rgba(255, 255, 255, 0.04)";
-          })
-          .attr("stroke-width", (l) => {
-            if (l.type !== "parent") return 0.5;
-            if (isLineageLink(l, lineageIds)) return 3;
-            return 1;
-          })
-          .attr("stroke-opacity", (l) => {
-            if (isLineageLink(l, lineageIds)) return 1;
-            return 0.3;
-          });
-
-        // Dim non-lineage nodes, keep lineage bright
-        node
-          .transition()
-          .duration(300)
-          .attr("opacity", (n) => {
-            if (lineageIds.has(n.id)) return 1;
-            return 0.12;
-          });
-      })
-
-    // ── Highlight selected node & lineage ──────────────────────────────────
-    if (selectedModelId) {
-      const ancestryIds = getAncestryIds(selectedModelId);
-      const descendantIds = getDescendantIds(selectedModelId);
-      const lineageIds = new Set([selectedModelId, ...ancestryIds, ...descendantIds]);
-
-      // Highlight the selected node ring
-      node.each(function (d) {
-        const isSel = d.id === selectedModelId;
-        const isLineage = lineageIds.has(d.id);
-        const dead = d.model.status === "deprecated" || d.model.status === "discontinued";
-        d3.select(this)
-          .select(".node-shape")
-          .attr("stroke-width", isSel ? 3.5 : isLineage ? 2.5 : (dead ? 1 : 2))
-          .attr("stroke", isSel ? "#fff" : d.color);
-      });
-
-      // Highlight lineage links
-      link
-        .attr("stroke", (l) => {
-          if (l.type !== "parent") return "rgba(245, 158, 11, 0.06)";
-          if (isLineageLink(l, lineageIds)) {
-            const selNode = nodes.find((n) => n.id === selectedModelId);
-            return selNode?.color ?? "rgba(255, 255, 255, 0.8)";
-          }
-          return "rgba(255, 255, 255, 0.04)";
-        })
-        .attr("stroke-width", (l) => {
-          if (l.type !== "parent") return 0.5;
-          if (isLineageLink(l, lineageIds)) return 3;
-          return 1;
-        });
-
-      // Dim non-lineage nodes
-      node.attr("opacity", (n) => (lineageIds.has(n.id) ? 1 : 0.12));
-    }
+    node.on("click", (event, d) => {
+      event.stopPropagation();
+      onSelectModelRef.current(d.model);
+    });
 
     node.on("mouseenter", (_event, d) => {
         if (hoveredId === d.id) return;
@@ -1104,20 +1121,18 @@ export function ForceGraph2D({
       });
 
       if (nodes.length > 0 && isFinite(minX)) {
-        const padX = 100;
-        const padY = 100;
+        const padX = 80;
+        const padY = 80;
         const gWidth = maxX - minX + padX * 2;
         const gHeight = maxY - minY + padY * 2;
 
         const currentW = container.getBoundingClientRect().width || width;
         const currentH = container.getBoundingClientRect().height || height;
 
-        // Scale comfortably: never tiny, never overcrowded
-        const scale = Math.min(
-          Math.max(currentW / gWidth, 0.28),
-          Math.max(currentH / gHeight, 0.28),
-          1.05
-        );
+        // Ensure scale keeps text readable and nodes well-proportioned
+        const fitScale = Math.min(currentW / gWidth, currentH / gHeight);
+        const scale = Math.min(Math.max(fitScale, 0.38), 1.05);
+
         const centerX = (minX + maxX) / 2;
         const centerY = (minY + maxY) / 2;
         const translateX = currentW / 2 - centerX * scale;
@@ -1131,6 +1146,7 @@ export function ForceGraph2D({
           svg
             .transition()
             .duration(500)
+            .ease(d3.easeCubicOut)
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             .call(zoom.transform as any, transform);
         } else {
@@ -1144,11 +1160,7 @@ export function ForceGraph2D({
     // Initial centering immediately so nodes don't appear microscopic or off-center
     fitView(false);
 
-    simulation.on("end", () => {
-      fitView(true);
-    });
-
-    // ── Resize observer ────────────────────────────────────────────────────
+    // ── Resize observer (only update SVG canvas size; never jump camera) ─────
     const observer = new ResizeObserver((entries) => {
       const entry = entries[0];
       if (entry) {
@@ -1156,7 +1168,6 @@ export function ForceGraph2D({
         const newH = entry.contentRect.height;
         if (newW > 100 && newH > 100) {
           svg.attr("width", newW).attr("height", newH);
-          fitView(false);
         }
       }
     });
@@ -1172,15 +1183,15 @@ export function ForceGraph2D({
     familiesKey,
     searchQuery,
     getFilteredData,
-    onSelectModel,
     motionEnabled,
     layoutMode,
   ]);
 
-  // ── Highlight selected node & lineage without rebuilding graph ──────────
+  // ── Highlight selected node & lineage and smoothly glide camera ──────────
   useEffect(() => {
     const svgEl = svgRef.current;
-    if (!svgEl) return;
+    const container = containerRef.current;
+    if (!svgEl || !container) return;
     const svg = d3.select(svgEl);
     const node = svg.selectAll<d3.BaseType, GraphNode>(".tree-node");
     const link = svg.selectAll<d3.BaseType, GraphLink>(".links path");
@@ -1299,6 +1310,34 @@ export function ForceGraph2D({
         if (isLineageLink(l, lineageIds)) return 1;
         return 0.35;
       });
+
+    // ── Smooth glide to center the selected node in the available viewport ──
+    const nodesData: GraphNode[] = [];
+    node.each((d) => {
+      nodesData.push(d);
+    });
+    const targetNode = nodesData.find((n) => n.id === selectedModelId);
+
+    if (targetNode && targetNode.x !== undefined && targetNode.y !== undefined && zoomRef.current) {
+      const currentTransform = d3.zoomTransform(svgEl);
+      const rect = container.getBoundingClientRect();
+      const currentW = rect.width || 800;
+      const currentH = rect.height || 600;
+
+      // Keep current zoom if user is already zoomed in, but ensure at least 0.65 for great legibility
+      const targetScale = Math.max(currentTransform.k, 0.65);
+      const targetX = currentW / 2 - targetNode.x * targetScale;
+      const targetY = currentH / 2 - targetNode.y * targetScale;
+
+      const transform = d3.zoomIdentity.translate(targetX, targetY).scale(targetScale);
+
+      svg
+        .transition()
+        .duration(450)
+        .ease(d3.easeCubicOut)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .call(zoomRef.current.transform as any, transform);
+    }
 
   }, [selectedModelId, getFilteredData]);
 
