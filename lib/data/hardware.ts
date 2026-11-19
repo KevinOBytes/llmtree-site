@@ -442,6 +442,20 @@ export const hardware: HardwareNode[] = [
     enabledBreakthroughs: "Hardware-isolated training and inference for regulated healthcare, defense, and sovereign AI workloads.",
     enabledModels: ["model-gemini-4-argon", "model-gemini-4-carbon"],
   },
+  {
+    id: "hw-nvidia-rubin-hpc",
+    name: "NVIDIA Rubin HPC",
+    manufacturer: "nvidia",
+    releaseDate: "2026-11",
+    specs: {
+      memory: "288 GB HBM4",
+      compute: "50,000+ CUDA Cores / 7th-Gen NVLink",
+      process: "3nm",
+    },
+    description: "Unveiled at SC26, a scientific-computing variant of NVIDIA's Vera Rubin architecture with 50,000+ CUDA cores and specialized hardware acceleration for sparse data, stencil math, and coupled physics-AI simulations.",
+    enabledBreakthroughs: "Bridged exascale scientific simulation with multi-trillion-parameter reasoning and AI-for-Science agent pipelines.",
+    enabledModels: ["model-gpt6.2-astra", "model-gemini-4-neon"],
+  },
 ];
 
 // Quick lookup map

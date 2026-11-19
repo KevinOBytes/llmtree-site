@@ -115,6 +115,7 @@ export function ForceGraph2D({
   // Stable refs for callbacks and active selection
   const onSelectModelRef = useRef(onSelectModel);
   const selectedModelIdRef = useRef(selectedModelId);
+  const prevSelectedModelIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     onSelectModelRef.current = onSelectModel;
@@ -907,9 +908,10 @@ export function ForceGraph2D({
           .attr("opacity", (n) => (lineageIds.has(n.id) ? 1 : 0.12));
 
         // Highlight the hovered/selected node rings specifically
+        const activeSelectedId = selectedModelIdRef.current;
         node.each(function (n) {
           const isActive = n.id === d.id;
-          const isSel = n.id === selectedModelId;
+          const isSel = n.id === activeSelectedId;
           const isLineage = lineageIds.has(n.id);
           const dead = n.model.status === "deprecated" || n.model.status === "discontinued";
           d3.select(this)
@@ -965,16 +967,17 @@ export function ForceGraph2D({
         // Hide tooltip
         tooltipGroup.style("display", "none");
 
-        if (selectedModelId) {
+        const activeSelectedId = selectedModelIdRef.current;
+        if (activeSelectedId) {
           // Restore selected model lineage highlights
-          const ancestryIds = getAncestryIds(selectedModelId);
-          const descendantIds = getDescendantIds(selectedModelId);
-          const lineageIds = new Set([selectedModelId, ...ancestryIds, ...descendantIds]);
+          const ancestryIds = getAncestryIds(activeSelectedId);
+          const descendantIds = getDescendantIds(activeSelectedId);
+          const lineageIds = new Set([activeSelectedId, ...ancestryIds, ...descendantIds]);
 
           node.transition().duration(200).attr("opacity", (n) => lineageIds.has(n.id) ? 1 : 0.12);
 
           node.each(function (n) {
-            const isSel = n.id === selectedModelId;
+            const isSel = n.id === activeSelectedId;
             const isLineage = lineageIds.has(n.id);
             const dead = n.model.status === "deprecated" || n.model.status === "discontinued";
             d3.select(this)
@@ -1178,7 +1181,6 @@ export function ForceGraph2D({
       observer.disconnect();
       if (motionAnimFrame) cancelAnimationFrame(motionAnimFrame);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     familiesKey,
     searchQuery,
@@ -1195,6 +1197,9 @@ export function ForceGraph2D({
     const svg = d3.select(svgEl);
     const node = svg.selectAll<d3.BaseType, GraphNode>(".tree-node");
     const link = svg.selectAll<d3.BaseType, GraphLink>(".links path");
+
+    const selectionChanged = prevSelectedModelIdRef.current !== selectedModelId;
+    prevSelectedModelIdRef.current = selectedModelId;
 
     if (!selectedModelId) {
       // Reset styling
@@ -1312,34 +1317,36 @@ export function ForceGraph2D({
       });
 
     // ── Smooth glide to center the selected node in the available viewport ──
-    const nodesData: GraphNode[] = [];
-    node.each((d) => {
-      nodesData.push(d);
-    });
-    const targetNode = nodesData.find((n) => n.id === selectedModelId);
+    if (selectionChanged) {
+      const nodesData: GraphNode[] = [];
+      node.each((d) => {
+        nodesData.push(d);
+      });
+      const targetNode = nodesData.find((n) => n.id === selectedModelId);
 
-    if (targetNode && targetNode.x !== undefined && targetNode.y !== undefined && zoomRef.current) {
-      const currentTransform = d3.zoomTransform(svgEl);
-      const rect = container.getBoundingClientRect();
-      const currentW = rect.width || 800;
-      const currentH = rect.height || 600;
+      if (targetNode && targetNode.x !== undefined && targetNode.y !== undefined && zoomRef.current) {
+        const currentTransform = d3.zoomTransform(svgEl);
+        const rect = container.getBoundingClientRect();
+        const currentW = rect.width || 800;
+        const currentH = rect.height || 600;
 
-      // Keep current zoom if user is already zoomed in, but ensure at least 0.65 for great legibility
-      const targetScale = Math.max(currentTransform.k, 0.65);
-      const targetX = currentW / 2 - targetNode.x * targetScale;
-      const targetY = currentH / 2 - targetNode.y * targetScale;
+        // Keep current zoom if user is already zoomed in, but ensure at least 0.65 for great legibility
+        const targetScale = Math.max(currentTransform.k, 0.65);
+        const targetX = currentW / 2 - targetNode.x * targetScale;
+        const targetY = currentH / 2 - targetNode.y * targetScale;
 
-      const transform = d3.zoomIdentity.translate(targetX, targetY).scale(targetScale);
+        const transform = d3.zoomIdentity.translate(targetX, targetY).scale(targetScale);
 
-      svg
-        .transition()
-        .duration(450)
-        .ease(d3.easeCubicOut)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .call(zoomRef.current.transform as any, transform);
+        svg
+          .transition()
+          .duration(450)
+          .ease(d3.easeCubicOut)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .call(zoomRef.current.transform as any, transform);
+      }
     }
 
-  }, [selectedModelId, getFilteredData]);
+  }, [selectedModelId, getFilteredData, layoutMode, motionEnabled]);
 
   return (
     <div ref={containerRef} className="relative w-full h-full min-h-[500px]">

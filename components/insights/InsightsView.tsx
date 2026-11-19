@@ -1334,7 +1334,7 @@ export function InsightsView() {
         {
           year: "Late 2026",
           stat: `${totalEfficiency} models`,
-          text: "By late 2026, efficiency spans hybrid linear-attention models (LFM3-8B), sparse-activation routing (Gemini 4 Carbon), and confidence-calibrated early stopping (arXiv:2611.00166). Frontier inference no longer burns peak compute unconditionally; compute scales dynamically with query difficulty.",
+          text: "By late 2026, efficiency spans hybrid linear-attention models (LFM3-8B), Google's periodic-table Gemini 4 efficiency curve (Hydrogen and Neon), Alibaba's sparse-MoE Qwen4-Max, and confidence-calibrated early stopping (arXiv:2611.00166). Frontier inference dynamically scales compute and thinking effort with task complexity.",
         },
       ],
       chart: (
@@ -1528,7 +1528,7 @@ export function InsightsView() {
         {
           year: "Late 2026",
           stat: `${agenticCount} models`,
-          text: "In November 2026, autonomous systems gained verifiable evidence linking via WikiTrace (arXiv:2611.14320), grounding multi-day agent memory graphs and eliminating hallucinated context decay. Models like Claude Fable 5.2 and Gemini 4 Argon operate as distributed swarms with cryptographic provenance and multi-step rollback guarantees.",
+          text: "In November 2026, autonomous systems gained verifiable evidence linking via WikiTrace (arXiv:2611.14320), grounding multi-day agent memory graphs. Flagships including Claude Fable 5.2, GPT-6.2 Astra/Sol, Qwen4-Max, and the periodic-table Gemini 4 lineup (Argon, Carbon, Hydrogen, Neon) orchestrate multi-step coding, science, and software workflows across 1M+ contexts.",
         },
       ],
       chart: (
